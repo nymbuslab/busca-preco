@@ -1,0 +1,102 @@
+squad:
+  code: busca-preco-completo
+  setor: desenvolvimento
+  grupo: busca-preco
+  sessao: completo
+  name: Busca Preço - API + Frontend
+  description: Desenvolvimento de API Python FastAPI para conexão MySQL e melhoria da UI/UX do frontend React
+  icon: package
+  version: "1.0.0"
+
+  company: "_expxagents/_memory/company.md"
+  preferences: "_expxagents/_memory/preferences.md"
+  memory: "_memory/memories.md"
+
+  target_audience: Lojistas de varejo que precisam consultar preços de produtos via código de barras ou busca por nome
+  platform: Web (React) + API (Python/FastAPI)
+  format: api-backend + react-frontend
+
+  skills:
+    - web_search
+    - web_fetch
+
+  data:
+    - name: mysql_config
+      description: Configuração do banco MySQL
+      fields:
+        host: localhost
+        port: 3306
+        user: automacao
+        password: rm123
+        database: automacao
+    - name: api_spec
+      description: Especificação da API esperada pelo frontend
+      base_url: "http://localhost:8000"
+      endpoints:
+        - GET /produtos/barras/{barcode}
+        - GET /produtos/descricao/{query}
+      response_format:
+        exatos: array of APIProduct
+        similares: array of APIProduct
+    - name: api_product_type
+      description: Tipo TypeScript do produto da API
+      fields:
+        - cod_produto: number
+        - produto: string
+        - cod_barras: string | null
+        - valor_venda1: number
+        - estoque: number | null
+        - valor_custo_atual: number | null
+        - valor_custo_15dias: number | null
+        - valor_custo_30dias: number | null
+        - data_custo_atual: string | null
+        - data_custo_15dias: string | null
+        - data_custo_30dias: string | null
+
+  agents:
+    - id: ux-designer
+      name: Lucas Oliveira
+      icon: palette
+      avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Lucas"
+      prompt: agents/ux-designer.md
+
+    - id: dba
+      name: Marina Santos
+      icon: database
+      avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Marina"
+      prompt: agents/dba.md
+
+    - id: backend-developer
+      name: Thiago Barbosa
+      icon: server
+      avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Thiago"
+      prompt: agents/backend-developer.md
+
+    - id: frontend-developer
+      name: Carla Ferreira
+      icon: code
+      avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Carla"
+      prompt: agents/frontend-developer.md
+
+  pipeline:
+    steps:
+      - id: step-01
+        agent: ux-designer
+        label: Análise UX e proposta de melhorias
+        execution: inline
+
+      - id: step-02
+        agent: dba
+        label: Revisar queries de custos (15/30 dias)
+        execution: inline
+
+      - id: step-03
+        agent: backend-developer
+        label: Implementar API Python FastAPI
+        execution: inline
+
+      - id: step-04
+        agent: frontend-developer
+        label: Implementar melhorias no frontend
+        execution: inline
+        deliverFrom: step-01
