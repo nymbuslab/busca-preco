@@ -32,11 +32,8 @@ Aplicação web para consulta rápida de preço, estoque e histórico de custo d
 │   ├── lib/utils.ts           # cn() do shadcn
 │   ├── types/product.ts       # Tipos de domínio (Product, PriceHistory)
 │   └── test/                  # Setup do Vitest
-├── api/                       # Backend FastAPI
-│   ├── main.py                # App + endpoints + pool MySQL via lifespan
-│   ├── models.py              # APIProduct, ProductResponse (pydantic)
-│   ├── config.py              # Settings via pydantic-settings
-│   ├── database.py            # (vazio — pool fica em main.py)
+├── api/                       # Backend FastAPI — arquivo unico
+│   ├── serve.py               # Settings + models + pool MySQL + endpoints + entrypoint uvicorn
 │   └── requirements.txt
 ├── public/
 ├── vite.config.ts             # alias "@" → ./src, dev em :8080
@@ -73,15 +70,16 @@ Heurística do frontend (`Index.tsx`): se o input casa `/^\d+$/`, chama `/barras
 
 - `VITE_API_URL` — base da API. Default no código: `http://localhost:8000`.
 
-**Backend (`.env` lido pelo `pydantic-settings`):**
+**Backend (`.env` lido pelo `pydantic-settings` em `api/serve.py`):**
 
 - `MYSQL_HOST` — host do MySQL (default `localhost`)
 - `MYSQL_PORT` — porta (default `3306`)
-- `MYSQL_USER` — usuário (default `automacao`)
-- `MYSQL_PASSWORD` — senha (sem default seguro)
-- `MYSQL_DATABASE` — database (default `automacao`)
-
-> ⚠ **Atenção:** `api/config.py` tem credenciais MySQL como **defaults hardcoded** (`mysql_user="automacao"`, `mysql_password="rm123"`). Idealmente esses defaults devem ser removidos (deixar `Settings` exigir `.env` ou usar valores neutros). Hoje, qualquer cópia do código sem `.env` se conecta com essas credenciais — investigar/corrigir.
+- `MYSQL_USER` — usuário (sem default — exigido)
+- `MYSQL_PASSWORD` — senha (sem default — exigida)
+- `MYSQL_DATABASE` — database (sem default — exigido)
+- `HOST` — bind do servidor (default `0.0.0.0`, aceita LAN)
+- `PORT` — porta do uvicorn (default `8000`)
+- `ALLOWED_ORIGINS` — CSV de origens para CORS. Default cobre dev local. **Em produção, adicionar a URL do Vercel.** Ex.: `https://busca-preco.vercel.app,http://localhost:8080`.
 
 ## Padrões de Código
 
@@ -89,7 +87,7 @@ Heurística do frontend (`Index.tsx`): se o input casa `/^\d+$/`, chama `/barras
 - **Frontend:** componentes funcionais com hooks. Alias `@` → `./src` (configurado em `vite.config.ts` e `tsconfig.app.json`).
 - **Estado de busca:** local no `Index.tsx` (não há store global). TanStack Query está instalado mas a busca atual usa `fetch` direto — uso de Query Client está apenas no provider.
 - **Toasts:** preferir `sonner` (já usado em `Index.tsx`); evitar duplicar com o `Toaster` de shadcn.
-- **Backend:** queries SQL parametrizadas (placeholders `%s` do aiomysql). **Não concatenar input em SQL.** CORS já libera `localhost:3000`, `:5173`, `:8080`.
+- **Backend:** **arquivo único `api/serve.py`** com settings + models + pool + endpoints + entrypoint. Não voltar a fragmentar em vários módulos. Queries SQL parametrizadas (placeholders `%s` do aiomysql). **Não concatenar input em SQL.** CORS via `ALLOWED_ORIGINS` (CSV no `.env`).
 - **Mapeamento API → domínio:** feito em `Index.tsx#mapApiToProduct`. Se o tipo `APIProduct` mudar no backend, ajustar lá.
 
 ## Comandos Úteis
@@ -103,10 +101,32 @@ bun run lint
 bun run test             # vitest run
 
 # Backend (a partir da raiz do projeto)
-.venv\Scripts\activate                      # PowerShell: .venv\Scripts\Activate.ps1
+.venv\Scripts\Activate.ps1                  # PowerShell
 pip install -r api/requirements.txt
-uvicorn api.main:app --reload --port 8000
+python api/serve.py                         # producao (uvicorn 0.0.0.0:8000)
+# dev com hot reload:
+uvicorn api.serve:app --reload --port 8000
 ```
+
+## Rodar como servico Windows (NSSM)
+
+Em PowerShell elevado, dentro da pasta do projeto:
+
+```powershell
+# Instalar (apontar para o python do .venv)
+nssm install BuscaPrecoAPI "C:\pasta_segura\projetos\busca-preco\.venv\Scripts\python.exe" "C:\pasta_segura\projetos\busca-preco\api\serve.py"
+nssm set BuscaPrecoAPI AppDirectory "C:\pasta_segura\projetos\busca-preco"
+nssm set BuscaPrecoAPI AppStdout "C:\pasta_segura\projetos\busca-preco\api\serve.log"
+nssm set BuscaPrecoAPI AppStderr "C:\pasta_segura\projetos\busca-preco\api\serve.log"
+nssm start BuscaPrecoAPI
+
+# Conferir / parar / remover
+nssm status BuscaPrecoAPI
+nssm stop   BuscaPrecoAPI
+nssm remove BuscaPrecoAPI confirm
+```
+
+O `.env` precisa estar na raiz do projeto (mesma pasta que vira `AppDirectory`).
 
 ## Regras de Desenvolvimento específicas do projeto
 
@@ -136,5 +156,6 @@ uvicorn api.main:app --reload --port 8000
 
 - Não é repositório Git ainda — inicializado durante `iniciar-sessao` em 2026-05-23.
 - README é o boilerplate do Lovable — atualizar ou substituir.
-- Credenciais MySQL hardcoded em `api/config.py` precisam sair do código.
+- **Backend consolidado em `api/serve.py`** (2026-05-23). Padrão: arquivo único como entrypoint, igual ao `serve.py` do GR7 Gestão. Sem mais `main.py`/`models.py`/`config.py`/`database.py`.
+- Credenciais MySQL: removidos defaults sensíveis do código; agora exigidas via `.env`.
 - Sem suite de testes real além do exemplo de Vitest.
