@@ -18,24 +18,14 @@ from pydantic_settings import BaseSettings
 
 
 # ------------------------------------------------------------
-# Settings — lidas do .env, sem defaults sensiveis hardcoded
+# Settings
 # ------------------------------------------------------------
 class Settings(BaseSettings):
     mysql_host: str = "localhost"
     mysql_port: int = 3306
-    mysql_user: str = ""
-    mysql_password: str = ""
-    mysql_database: str = ""
-
-    host: str = "0.0.0.0"
-    port: int = 8000
-
-    # CSV de origens permitidas. Default cobre dev local; em producao,
-    # acrescentar a URL do Vercel via .env. Ex.:
-    # ALLOWED_ORIGINS=https://busca-preco.vercel.app,http://localhost:8080
-    allowed_origins: str = (
-        "http://localhost:3000,http://localhost:5173,http://localhost:8080"
-    )
+    mysql_user: str = "automacao"
+    mysql_password: str = "rm123"
+    mysql_database: str = "automacao"
 
     class Config:
         env_file = ".env"
@@ -110,7 +100,11 @@ app = FastAPI(title="Busca Preco API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in settings.allowed_origins.split(",") if o.strip()],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8080",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -143,21 +137,6 @@ async def execute_query(pool, query, params=None):
             return await cur.fetchall()
 
 
-SELECT_COLS = """
-    cod_produto,
-    produto,
-    cod_barras,
-    valor_venda1,
-    estoque,
-    valor_custo_atual,
-    valor_custo_15dias,
-    valor_custo_30dias,
-    data_custo_atual,
-    data_custo_15dias,
-    data_custo_30dias
-"""
-
-
 # ------------------------------------------------------------
 # Endpoints
 # ------------------------------------------------------------
@@ -165,14 +144,37 @@ SELECT_COLS = """
 async def buscar_por_barras(barcode: str):
     pool = await get_db_pool()
 
-    exatos_query = f"""
-        SELECT {SELECT_COLS}
+    exatos_query = """
+        SELECT
+            cod_produto,
+            produto,
+            cod_barras,
+            valor_venda1,
+            estoque,
+            valor_custo_atual,
+            valor_custo_15dias,
+            valor_custo_30dias,
+            data_custo_atual,
+            data_custo_15dias,
+            data_custo_30dias
         FROM produtos
         WHERE cod_barras = %s
         LIMIT 10
     """
-    similares_query = f"""
-        SELECT {SELECT_COLS}
+
+    similares_query = """
+        SELECT
+            cod_produto,
+            produto,
+            cod_barras,
+            valor_venda1,
+            estoque,
+            valor_custo_atual,
+            valor_custo_15dias,
+            valor_custo_30dias,
+            data_custo_atual,
+            data_custo_15dias,
+            data_custo_30dias
         FROM produtos
         WHERE cod_barras LIKE %s AND cod_barras != %s
         LIMIT 10
@@ -181,24 +183,47 @@ async def buscar_por_barras(barcode: str):
     exatos_rows = await execute_query(pool, exatos_query, (barcode,))
     similares_rows = await execute_query(pool, similares_query, (f"{barcode}%", barcode))
 
-    return ProductResponse(
-        exatos=[row_to_product(r) for r in exatos_rows],
-        similares=[row_to_product(r) for r in similares_rows],
-    )
+    exatos = [row_to_product(row) for row in exatos_rows]
+    similares = [row_to_product(row) for row in similares_rows]
+
+    return ProductResponse(exatos=exatos, similares=similares)
 
 
 @app.get("/produtos/descricao/{query}", response_model=ProductResponse)
 async def buscar_por_descricao(query: str):
     pool = await get_db_pool()
 
-    exatos_query = f"""
-        SELECT {SELECT_COLS}
+    exatos_query = """
+        SELECT
+            cod_produto,
+            produto,
+            cod_barras,
+            valor_venda1,
+            estoque,
+            valor_custo_atual,
+            valor_custo_15dias,
+            valor_custo_30dias,
+            data_custo_atual,
+            data_custo_15dias,
+            data_custo_30dias
         FROM produtos
         WHERE UPPER(produto) = UPPER(%s)
         LIMIT 10
     """
-    similares_query = f"""
-        SELECT {SELECT_COLS}
+
+    similares_query = """
+        SELECT
+            cod_produto,
+            produto,
+            cod_barras,
+            valor_venda1,
+            estoque,
+            valor_custo_atual,
+            valor_custo_15dias,
+            valor_custo_30dias,
+            data_custo_atual,
+            data_custo_15dias,
+            data_custo_30dias
         FROM produtos
         WHERE UPPER(produto) LIKE UPPER(%s) AND UPPER(produto) != UPPER(%s)
         ORDER BY produto ASC
@@ -208,18 +233,22 @@ async def buscar_por_descricao(query: str):
     exatos_rows = await execute_query(pool, exatos_query, (query,))
     similares_rows = await execute_query(pool, similares_query, (f"%{query}%", query))
 
-    return ProductResponse(
-        exatos=[row_to_product(r) for r in exatos_rows],
-        similares=[row_to_product(r) for r in similares_rows],
-    )
+    exatos = [row_to_product(row) for row in exatos_rows]
+    similares = [row_to_product(row) for row in similares_rows]
+
+    return ProductResponse(exatos=exatos, similares=similares)
 
 
 # ------------------------------------------------------------
 # Entrypoint — `python api/serve.py`
 # ------------------------------------------------------------
+HOST = "0.0.0.0"
+PORT = 8000
+
+
 def main():
-    print(f"[OK] Busca Preco API rodando em http://{settings.host}:{settings.port}")
-    uvicorn.run(app, host=settings.host, port=settings.port, log_level="info")
+    print(f"[OK] Busca Preco API rodando em http://{HOST}:{PORT}")
+    uvicorn.run(app, host=HOST, port=PORT, log_level="info")
 
 
 if __name__ == "__main__":

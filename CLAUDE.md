@@ -70,16 +70,15 @@ Heurística do frontend (`Index.tsx`): se o input casa `/^\d+$/`, chama `/barras
 
 - `VITE_API_URL` — base da API. Default no código: `http://localhost:8000`.
 
-**Backend (`.env` lido pelo `pydantic-settings` em `api/serve.py`):**
+**Backend (`.env` lido pelo `pydantic-settings` em `api/serve.py`, com defaults no código):**
 
-- `MYSQL_HOST` — host do MySQL (default `localhost`)
-- `MYSQL_PORT` — porta (default `3306`)
-- `MYSQL_USER` — usuário (sem default — exigido)
-- `MYSQL_PASSWORD` — senha (sem default — exigida)
-- `MYSQL_DATABASE` — database (sem default — exigido)
-- `HOST` — bind do servidor (default `0.0.0.0`, aceita LAN)
-- `PORT` — porta do uvicorn (default `8000`)
-- `ALLOWED_ORIGINS` — CSV de origens para CORS. Default cobre dev local. **Em produção, adicionar a URL do Vercel.** Ex.: `https://busca-preco.vercel.app,http://localhost:8080`.
+- `MYSQL_HOST` — default `localhost`
+- `MYSQL_PORT` — default `3306`
+- `MYSQL_USER` — default `automacao`
+- `MYSQL_PASSWORD` — default `rm123`
+- `MYSQL_DATABASE` — default `automacao`
+
+`HOST` e `PORT` do uvicorn são constantes no topo do `serve.py` (`0.0.0.0:8000`). CORS é hardcoded (`localhost:3000/5173/8080`) — quando o site estiver no Vercel, **adicionar a URL pública à lista `allow_origins` direto no arquivo**.
 
 ## Padrões de Código
 
@@ -87,7 +86,7 @@ Heurística do frontend (`Index.tsx`): se o input casa `/^\d+$/`, chama `/barras
 - **Frontend:** componentes funcionais com hooks. Alias `@` → `./src` (configurado em `vite.config.ts` e `tsconfig.app.json`).
 - **Estado de busca:** local no `Index.tsx` (não há store global). TanStack Query está instalado mas a busca atual usa `fetch` direto — uso de Query Client está apenas no provider.
 - **Toasts:** preferir `sonner` (já usado em `Index.tsx`); evitar duplicar com o `Toaster` de shadcn.
-- **Backend:** **arquivo único `api/serve.py`** com settings + models + pool + endpoints + entrypoint. Não voltar a fragmentar em vários módulos. Queries SQL parametrizadas (placeholders `%s` do aiomysql). **Não concatenar input em SQL.** CORS via `ALLOWED_ORIGINS` (CSV no `.env`).
+- **Backend:** **arquivo único `api/serve.py`** com settings + models + pool + endpoints + entrypoint. Não voltar a fragmentar em vários módulos. Queries SQL parametrizadas (placeholders `%s` do aiomysql). **Não concatenar input em SQL.** Lista de origens CORS é hardcoded — editar direto no arquivo quando precisar liberar nova URL.
 - **Mapeamento API → domínio:** feito em `Index.tsx#mapApiToProduct`. Se o tipo `APIProduct` mudar no backend, ajustar lá.
 
 ## Comandos Úteis
@@ -157,5 +156,5 @@ O `.env` precisa estar na raiz do projeto (mesma pasta que vira `AppDirectory`).
 - Não é repositório Git ainda — inicializado durante `iniciar-sessao` em 2026-05-23.
 - README é o boilerplate do Lovable — atualizar ou substituir.
 - **Backend consolidado em `api/serve.py`** (2026-05-23). Padrão: arquivo único como entrypoint, igual ao `serve.py` do GR7 Gestão. Sem mais `main.py`/`models.py`/`config.py`/`database.py`.
-- Credenciais MySQL: removidos defaults sensíveis do código; agora exigidas via `.env`.
+- **Lógica da API mantida idêntica** à versão anterior (defaults MySQL no código, CORS hardcoded). A consolidação foi apenas estrutural — não mexer no comportamento sem combinação prévia.
 - Sem suite de testes real além do exemplo de Vitest.
