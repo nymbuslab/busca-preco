@@ -1,8 +1,6 @@
-import { Product } from "@/types/product";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Package, Barcode, DollarSign, TrendingDown, Calendar, Copy, Check } from "lucide-react";
 import { useState } from "react";
+import { Copy, Check } from "lucide-react";
+import { Product } from "@/types/product";
 
 interface ProductCardProps {
   product: Product;
@@ -10,7 +8,7 @@ interface ProductCardProps {
 }
 
 function formatCurrency(value: number | null): string {
-  if (value === null || value === undefined) return "R$ 0,00";
+  if (value === null || value === undefined) return "—";
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -18,73 +16,76 @@ function formatCurrency(value: number | null): string {
 }
 
 function formatDate(dateString: string | null): string {
-  if (!dateString) return "Sem informações";
+  if (!dateString) return "—";
   try {
     return new Intl.DateTimeFormat("pt-BR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
     }).format(new Date(dateString));
-  } catch (e) {
-    return "Sem informações";
+  } catch {
+    return "—";
   }
 }
 
-interface InfoRowProps {
-  icon: React.ReactNode;
+function formatEstoque(value: number): string {
+  // double(15,3) do banco — preserva ate 3 casas decimais quando houver,
+  // sem casas quando o valor e inteiro perfeito.
+  return Number.isInteger(value)
+    ? String(value)
+    : value.toLocaleString("pt-BR", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 3,
+      });
+}
+
+const PESAVEL_LABEL: Record<string, string> = {
+  S: "Pesável",
+  L: "Pesável",
+  U: "Pesável p/ unidade",
+};
+
+interface CostRowProps {
   label: string;
-  value: string | number;
-  highlight?: boolean;
-}
-
-function InfoRow({ icon, label, value, highlight = false }: InfoRowProps) {
-  return (
-    <div className="flex items-center gap-3 py-3 border-b border-border/50 last:border-0">
-      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-secondary">
-        {icon}
-      </div>
-      <div className="flex-1">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className={`font-semibold ${highlight ? "text-primary text-lg" : "text-foreground"}`}>
-          {value}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-interface PriceHistoryCardProps {
-  title: string;
-  price: number | null;
+  hint?: string;
   date: string | null;
-  variant: "current" | "15days" | "30days";
+  price: number | null;
+  accent?: "primary" | "success" | "warning" | "info";
 }
 
-function PriceHistoryCard({ title, price, date, variant }: PriceHistoryCardProps) {
-  const bgColors = {
-    current: "bg-success/10 border-success/20",
-    "15days": "bg-warning/10 border-warning/20",
-    "30days": "bg-info/10 border-info/20",
+function CostRow({ label, hint, date, price, accent }: CostRowProps) {
+  const isEmpty = price === null;
+  const accentColor = {
+    primary: "text-primary",
+    success: "text-success",
+    warning: "text-warning",
+    info: "text-info",
   };
-
-  const iconColors = {
-    current: "text-success",
-    "15days": "text-warning",
-    "30days": "text-info",
-  };
+  const priceClass = isEmpty
+    ? "text-muted-foreground/60"
+    : accent
+    ? accentColor[accent]
+    : "text-foreground";
 
   return (
-    <div className={`rounded-lg border p-4 ${bgColors[variant]}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <TrendingDown className={`h-4 w-4 ${iconColors[variant]}`} />
-        <span className="text-sm font-medium text-foreground">{title}</span>
+    <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 py-2.5">
+      <div>
+        <p className="smallcaps text-[10px] text-foreground/80 font-medium">
+          {label}
+        </p>
+        {hint && (
+          <p className="font-mono text-[10px] text-muted-foreground/80 mt-0.5">
+            {hint}
+          </p>
+        )}
       </div>
-      <p className={`font-bold text-foreground mb-1 ${price !== null ? "text-xl" : "text-sm text-muted-foreground"}`}>
-        {price !== null ? formatCurrency(price) : "Sem informações"}
-      </p>
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-        <Calendar className="h-3 w-3" />
-        <span>{formatDate(date)}</span>
+      <div className="text-right">
+        <p className={`font-mono text-base tabular-nums tracking-tight ${priceClass}`}>
+          {formatCurrency(price)}
+        </p>
+        <p className="font-mono text-[10px] text-muted-foreground tabular-nums mt-0.5">
+          {formatDate(date)}
+        </p>
       </div>
     </div>
   );
@@ -100,90 +101,117 @@ export function ProductCard({ product, variant = "exact" }: ProductCardProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const hasBarcode =
+    product.codigoBarras && product.codigoBarras !== "Sem informações";
+
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-elevated animate-fade-in">
-      <CardHeader className="pb-2">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant="outline">Código: {product.codigo}</Badge>
-            {variant === "exact" ? (
-              <Badge className="bg-success/15 text-success border-success/30 hover:bg-success/20">Exato</Badge>
+    <article
+      className={
+        "ledger-in border-y border-foreground/20 py-6 " +
+        (variant === "similar" ? "opacity-90" : "")
+      }
+    >
+      {/* CABECALHO: codigo + tag */}
+      <header className="flex items-baseline justify-between mb-3">
+        <p className="font-mono text-[11px] text-muted-foreground">
+          <span className="smallcaps">Cód</span>{" "}
+          <span className="text-foreground">{product.codigo}</span>
+        </p>
+        <span
+          className={
+            "smallcaps text-[10px] font-mono tag-bracket " +
+            (variant === "exact" ? "text-primary" : "text-muted-foreground")
+          }
+        >
+          {variant === "exact" ? "Exato" : "Similar"}
+        </span>
+      </header>
+
+      {/* NOME DO PRODUTO */}
+      <h3 className="text-xl md:text-2xl font-semibold leading-tight tracking-tight text-foreground">
+        {product.descricao}
+      </h3>
+
+      {/* CODIGO DE BARRAS */}
+      <div className="mt-3 flex items-center gap-3">
+        <p className="font-mono text-xs tracking-[0.06em] text-muted-foreground">
+          <span className="smallcaps">EAN</span>{" "}
+          <span className={hasBarcode ? "text-foreground" : "italic"}>
+            {product.codigoBarras}
+          </span>
+        </p>
+        {hasBarcode && (
+          <button
+            type="button"
+            onClick={handleCopyBarcode}
+            title="Copiar código de barras"
+            aria-label="Copiar código de barras"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-success" />
             ) : (
-              <Badge className="bg-warning/15 text-warning border-warning/30 hover:bg-warning/20">Similar</Badge>
+              <Copy className="h-3.5 w-3.5" />
             )}
-          </div>
-          <h2 className="text-xl font-bold text-foreground">{product.descricao}</h2>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
-        {/* Main Info */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-3 py-3 border-b border-border/50">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-secondary">
-              <Barcode className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">Código de Barras</p>
-              <p className="font-semibold text-foreground">{product.codigoBarras}</p>
-            </div>
-            {product.codigoBarras !== "Sem informações" && (
-              <button
-                type="button"
-                onClick={handleCopyBarcode}
-                className="p-1.5 rounded-md hover:bg-secondary transition-colors"
-                title="Copiar código de barras"
-                aria-label="Copiar código de barras"
-              >
-                {copied ? (
-                  <Check className="h-4 w-4 text-success" />
-                ) : (
-                  <Copy className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
-                )}
-              </button>
-            )}
-          </div>
-          <InfoRow
-            icon={<DollarSign className="h-5 w-5 text-primary" />}
-            label="Preço de Venda"
-            value={formatCurrency(product.precoVenda)}
-            highlight
-          />
-          <InfoRow
-            icon={<Package className="h-5 w-5 text-muted-foreground" />}
-            label="Estoque Disponível"
-            value={`${product.estoque} unidades`}
-          />
+          </button>
+        )}
+      </div>
+
+      {/* PRECO DE VENDA + ESTOQUE */}
+      <div className="mt-6 space-y-3 pt-4 border-t border-foreground/15">
+        <div className="leader">
+          <span className="smallcaps text-xs text-foreground/80">Preço de venda</span>
+          <span className="font-mono text-3xl md:text-4xl tabular-nums tracking-tight text-primary">
+            {formatCurrency(product.precoVenda)}
+          </span>
         </div>
 
-        {/* Price History Section */}
-        <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <TrendingDown className="h-4 w-4" />
-            Histórico de Preço de Custo
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <PriceHistoryCard
-              title="Custo Atual"
-              price={product.precoCustoAtual.price}
-              date={product.precoCustoAtual.purchaseDate}
-              variant="current"
-            />
-            <PriceHistoryCard
-              title="Custo 15 Dias"
-              price={product.precoCusto15Dias.price}
-              date={product.precoCusto15Dias.purchaseDate}
-              variant="15days"
-            />
-            <PriceHistoryCard
-              title="Custo 30 Dias"
-              price={product.precoCusto30Dias.price}
-              date={product.precoCusto30Dias.purchaseDate}
-              variant="30days"
-            />
-          </div>
+        <div className="leader">
+          <span className="smallcaps text-xs text-foreground/80">
+            Estoque
+            {PESAVEL_LABEL[product.pesavel] && (
+              <span className="ml-2 text-[9px] text-muted-foreground font-normal normal-case tracking-normal">
+                · {PESAVEL_LABEL[product.pesavel]}
+              </span>
+            )}
+          </span>
+          <span className="font-mono text-base tabular-nums">
+            {formatEstoque(product.estoque)}{" "}
+            <span className="text-muted-foreground text-xs">{product.unidade}</span>
+          </span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* HISTORICO DE CUSTO */}
+      <div className="mt-6 pt-4 border-t border-foreground/15">
+        <p className="smallcaps text-[10px] font-mono text-muted-foreground mb-1">
+          Histórico de custo
+        </p>
+
+        <div className="divide-y divide-foreground/10">
+          <CostRow
+            label="Atual"
+            hint="última compra"
+            date={product.precoCustoAtual.purchaseDate}
+            price={product.precoCustoAtual.price}
+            accent="success"
+          />
+          <CostRow
+            label="Mês anterior"
+            hint="≈ 15 dias"
+            date={product.precoCusto15Dias.purchaseDate}
+            price={product.precoCusto15Dias.price}
+            accent="warning"
+          />
+          <CostRow
+            label="Dois meses atrás"
+            hint="≈ 30 dias"
+            date={product.precoCusto30Dias.purchaseDate}
+            price={product.precoCusto30Dias.price}
+            accent="info"
+          />
+        </div>
+      </div>
+    </article>
   );
 }

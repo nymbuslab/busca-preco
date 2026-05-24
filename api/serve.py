@@ -103,6 +103,8 @@ class APIProduct(BaseModel):
     cod_barras: Optional[str]
     valor_venda1: float
     estoque: Optional[float]
+    pesavel: Optional[str]   # N|S|L|U — regra de balanca
+    unidade: Optional[str]   # KG|UN|LT|...
     valor_custo_atual: Optional[float]
     valor_custo_15dias: Optional[float]
     valor_custo_30dias: Optional[float]
@@ -188,7 +190,9 @@ PRODUTO_COLS = """
     valor_venda1,
     qtd_estoque,
     valor_compra,
-    data_ultima_compra
+    data_ultima_compra,
+    pesavel,
+    unidade
 """
 
 
@@ -264,6 +268,8 @@ def montar_produto(
         qtd_estoque,
         valor_compra,
         data_ultima_compra,
+        pesavel,
+        unidade,
     ) = row
 
     c15 = custos_15.get(cod_barras, (None, None)) if cod_barras else (None, None)
@@ -274,7 +280,9 @@ def montar_produto(
         produto=produto,
         cod_barras=cod_barras,
         valor_venda1=float(valor_venda1) if valor_venda1 is not None else 0.0,
-        estoque=qtd_estoque,
+        estoque=float(qtd_estoque) if qtd_estoque is not None else None,
+        pesavel=pesavel.strip() if isinstance(pesavel, str) else pesavel,
+        unidade=unidade.strip() if isinstance(unidade, str) else unidade,
         valor_custo_atual=float(valor_compra) if valor_compra is not None else None,
         data_custo_atual=data_ultima_compra.isoformat() if data_ultima_compra else None,
         valor_custo_15dias=c15[0],
@@ -297,6 +305,8 @@ async def enriquecer_com_custos(pool, rows) -> List[APIProduct]:
 # ------------------------------------------------------------
 @app.get("/produtos/barras/{barcode}", response_model=ProductResponse)
 async def buscar_por_barras(barcode: str):
+    """Busca exata por codigo de barras. Sem similares — leitor escaneia
+    um codigo especifico, o operador quer aquele produto."""
     pool = await get_db_pool()
 
     exatos_query = f"""
@@ -305,20 +315,10 @@ async def buscar_por_barras(barcode: str):
         WHERE cod_barras = %s AND ativo = 'S'
         LIMIT 10
     """
-    similares_query = f"""
-        SELECT {PRODUTO_COLS}
-        FROM produto
-        WHERE cod_barras LIKE %s AND cod_barras != %s AND ativo = 'S'
-        LIMIT 10
-    """
-
     exatos_rows = await execute_query(pool, exatos_query, (barcode,))
-    similares_rows = await execute_query(pool, similares_query, (f"{barcode}%", barcode))
-
     exatos = await enriquecer_com_custos(pool, exatos_rows)
-    similares = await enriquecer_com_custos(pool, similares_rows)
 
-    return ProductResponse(exatos=exatos, similares=similares)
+    return ProductResponse(exatos=exatos, similares=[])
 
 
 @app.get("/produtos/descricao/{query}", response_model=ProductResponse)

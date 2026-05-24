@@ -9,6 +9,8 @@ export interface Product {
   codigoBarras: string;
   precoVenda: number;
   estoque: number;
+  unidade: string;      // KG | UN | PT | CX | LT | ...
+  pesavel: string;      // N | S | L | U | ...
   precoCustoAtual: PriceHistory;
   precoCusto15Dias: PriceHistory;
   precoCusto30Dias: PriceHistory;

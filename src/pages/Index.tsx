@@ -2,7 +2,6 @@ import { useCallback, useState } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { Product } from "@/types/product";
-import { Package, Search, CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -12,6 +11,8 @@ type APIProduct = {
   cod_barras: string | null;
   valor_venda1: number;
   estoque: number | null;
+  pesavel: string | null;
+  unidade: string | null;
   valor_custo_atual: number | null;
   valor_custo_15dias: number | null;
   valor_custo_30dias: number | null;
@@ -38,7 +39,9 @@ function mapApiToProduct(item: APIProduct): Product {
     descricao: item.produto,
     codigoBarras: item.cod_barras || "Sem informações",
     precoVenda: item.valor_venda1,
-    estoque: item.estoque || 0,
+    estoque: item.estoque ?? 0,
+    unidade: (item.unidade || "").trim() || "UN",
+    pesavel: (item.pesavel || "").trim() || "N",
     precoCustoAtual: {
       price: item.valor_custo_atual,
       purchaseDate: item.data_custo_atual,
@@ -56,36 +59,18 @@ function mapApiToProduct(item: APIProduct): Product {
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 max-w-2xl mx-auto">
       {[1, 2].map((i) => (
-        <div key={i} className="w-full max-w-2xl mx-auto">
-          <div className="rounded-lg border bg-card p-6 shadow-sm">
-            <div className="flex items-center gap-4 mb-4">
-              <Skeleton className="h-10 w-20 rounded" />
-              <Skeleton className="h-6 w-48" />
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 rounded-lg" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-5 w-24 ml-auto" />
-              </div>
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 rounded-lg" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-6 w-20 ml-auto" />
-              </div>
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 rounded-lg" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-5 w-16 ml-auto" />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3 mt-6">
-              <Skeleton className="h-24 rounded-lg" />
-              <Skeleton className="h-24 rounded-lg" />
-              <Skeleton className="h-24 rounded-lg" />
-            </div>
+        <div key={i} className="border-y border-foreground/20 py-6 space-y-4">
+          <div className="flex items-baseline justify-between">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+          <Skeleton className="h-8 w-3/4" />
+          <div className="space-y-2 pt-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
           </div>
         </div>
       ))}
@@ -148,111 +133,116 @@ export default function Index() {
   const totalResults = results.exatos.length + results.similares.length;
 
   return (
-    <div className="min-h-screen gradient-hero relative">
-      <header className="w-full py-6 px-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-center gap-3">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl gradient-primary shadow-glow">
-            <Package className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Busca Preço</h1>
-            <p className="text-sm text-muted-foreground">Consulte preços e estoque rapidamente</p>
-          </div>
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <header className="w-full border-b border-foreground/15">
+        <div className="max-w-3xl mx-auto px-6 py-6 flex items-baseline justify-between">
+          <h1 className="text-2xl font-semibold leading-none tracking-tight">
+            Consulta<span className="text-primary">.</span>Preço
+          </h1>
+          <span className="smallcaps text-[10px] text-muted-foreground font-mono">
+            Sistema interno · v1.0
+          </span>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <section className="mb-10">
-          <SearchBar onSearch={handleSearch} onClear={handleClear} isLoading={isLoading} debounceMs={300} />
-        </section>
+      <main className="flex-1 w-full">
+        <div className="max-w-3xl mx-auto px-6 py-10">
+          <section className="mb-12">
+            <SearchBar onSearch={handleSearch} onClear={handleClear} isLoading={isLoading} debounceMs={300} />
+          </section>
 
-        <section 
-          id="search-results" 
-          className="space-y-8"
-          role="region"
-          aria-label="Resultados da busca"
-          aria-live="polite"
-        >
-          {isLoading && <LoadingSkeleton />}
+          <section
+            id="search-results"
+            className="space-y-10"
+            role="region"
+            aria-label="Resultados da busca"
+            aria-live="polite"
+          >
+            {isLoading && <LoadingSkeleton />}
 
-          {!isLoading && totalResults > 0 && (
-            <>
-              {results.exatos.length > 0 && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 px-1">
-                    <CheckCircle2 className="h-5 w-5 text-success" />
-                    <h2 className="text-lg font-semibold text-foreground">
-                      Resultados Exatos
-                    </h2>
-                    <span className="ml-auto text-sm text-muted-foreground">
-                      {results.exatos.length} produto{results.exatos.length !== 1 ? "s" : ""}
-                    </span>
+            {!isLoading && totalResults > 0 && (
+              <>
+                {results.exatos.length > 0 && (
+                  <div className="space-y-4 ledger-in">
+                    <div className="flex items-baseline justify-between rule pb-2">
+                      <h2 className="smallcaps text-xs font-medium">
+                        Resultado exato
+                      </h2>
+                      <span className="font-mono text-[11px] text-muted-foreground">
+                        {String(results.exatos.length).padStart(2, "0")} {results.exatos.length === 1 ? "item" : "itens"}
+                      </span>
+                    </div>
+                    <div role="list" aria-label={`${results.exatos.length} resultados exatos`} className="space-y-8">
+                      {results.exatos.map((product) => (
+                        <ProductCard
+                          key={`exact-${product.codigo}`}
+                          product={product}
+                          variant="exact"
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div 
-                    className="grid grid-cols-1 gap-4"
-                    role="list"
-                    aria-label={`${results.exatos.length} resultados exatos`}
-                  >
-                    {results.exatos.map((product) => (
-                      <ProductCard
-                        key={`exact-${product.codigo}`}
-                        product={product}
-                        variant="exact"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
 
-              {results.similares.length > 0 && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 px-1">
-                    <Sparkles className="h-5 w-5 text-warning" />
-                    <h2 className="text-lg font-semibold text-foreground">
-                      Resultados Similares
-                    </h2>
-                    <span className="ml-auto text-sm text-muted-foreground">
-                      {results.similares.length} produto{results.similares.length !== 1 ? "s" : ""}
-                    </span>
+                {results.similares.length > 0 && (
+                  <div className="space-y-4 ledger-in">
+                    <div className="flex items-baseline justify-between rule pb-2">
+                      <h2 className="smallcaps text-xs font-medium">
+                        Similares <span className="text-muted-foreground/70 font-normal normal-case tracking-normal">— mesmo prefixo</span>
+                      </h2>
+                      <span className="font-mono text-[11px] text-muted-foreground">
+                        {String(results.similares.length).padStart(2, "0")} {results.similares.length === 1 ? "item" : "itens"}
+                      </span>
+                    </div>
+                    <div role="list" aria-label={`${results.similares.length} resultados similares`} className="space-y-8">
+                      {results.similares.map((product) => (
+                        <ProductCard
+                          key={`similar-${product.codigo}`}
+                          product={product}
+                          variant="similar"
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div 
-                    className="grid grid-cols-1 gap-4 opacity-90"
-                    role="list"
-                    aria-label={`${results.similares.length} resultados similares`}
-                  >
-                    {results.similares.map((product) => (
-                      <ProductCard
-                        key={`similar-${product.codigo}`}
-                        product={product}
-                        variant="similar"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+                )}
+              </>
+            )}
 
-          {!isLoading && totalResults === 0 && hasSearched && (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <Package className="h-16 w-16 mb-4 opacity-30" />
-              <p className="text-lg font-medium">Produto não encontrado</p>
-              <p className="text-sm">Confira o código de barras ou escaneie de novo</p>
-            </div>
-          )}
+            {!isLoading && totalResults === 0 && hasSearched && (
+              <div className="py-20 text-center space-y-2 border-y border-foreground/15">
+                <p className="smallcaps text-xs text-muted-foreground font-mono">
+                  ∅ Sem resultado
+                </p>
+                <p className="text-xl font-medium">Código não cadastrado.</p>
+                <p className="text-sm text-muted-foreground">
+                  Confira os números ou escaneie novamente.
+                </p>
+              </div>
+            )}
 
-          {!hasSearched && (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <Search className="h-16 w-16 mb-4 opacity-20" />
-              <p className="text-lg font-medium">Digite ou escaneie o código de barras</p>
-              <p className="text-sm">Use o leitor da câmera ou digite os números</p>
-            </div>
-          )}
-        </section>
+            {!hasSearched && (
+              <div className="py-20 text-center space-y-3">
+                <p className="smallcaps text-xs text-muted-foreground font-mono">
+                  Aguardando leitura
+                </p>
+                <p className="text-2xl font-medium leading-tight tracking-tight">
+                  Digite ou escaneie<br />
+                  o <span className="text-primary">código de barras</span>.
+                </p>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                  Use o leitor da câmera, um scanner USB ou digite manualmente os números.
+                </p>
+              </div>
+            )}
+          </section>
+        </div>
       </main>
 
-      <footer className="w-full py-4 text-center text-sm text-muted-foreground">
-        <p>Nymbus Lab © {new Date().getFullYear()}</p>
+      <footer className="w-full border-t border-foreground/15">
+        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+          <span className="smallcaps">Nymbus Lab</span>
+          <span>© {new Date().getFullYear()}</span>
+        </div>
       </footer>
     </div>
   );

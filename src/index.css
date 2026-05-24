@@ -2,106 +2,89 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 222 47% 11%;
+    /* paleta fria — papel cool gray com azul vibrante */
+    --background: 214 30% 96%;
+    --foreground: 220 47% 11%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 214 30% 96%;
+    --card-foreground: 220 47% 11%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 214 30% 96%;
+    --popover-foreground: 220 47% 11%;
 
-    --primary: 217 91% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 222 100% 55%;
+    --primary-foreground: 214 30% 96%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 214 25% 91%;
+    --secondary-foreground: 220 47% 11%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 214 25% 93%;
+    --muted-foreground: 215 19% 35%;
 
-    --accent: 142 76% 36%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 222 100% 55%;
+    --accent-foreground: 214 30% 96%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 214 30% 96%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 50%;
+    --border: 215 20% 82%;
+    --input: 215 20% 82%;
+    --ring: 222 100% 55%;
 
-    --radius: 0.75rem;
+    --radius: 0.25rem;
 
-    /* Custom tokens */
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --info: 199 89% 48%;
-    --info-foreground: 0 0% 100%;
+    /* 3 idades de custo em tons frios distintos */
+    --success: 175 77% 32%;
+    --success-foreground: 214 30% 96%;
+    --warning: 244 58% 51%;
+    --warning-foreground: 214 30% 96%;
+    --info: 215 19% 45%;
+    --info-foreground: 214 30% 96%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 50%) 0%, hsl(217 91% 40%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(210 20% 98%) 0%, hsl(210 40% 96%) 100%);
-    
-    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow-elevated: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-glow: 0 0 20px -5px hsl(217 91% 50% / 0.3);
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 214 30% 96%;
+    --sidebar-foreground: 220 47% 11%;
+    --sidebar-primary: 222 100% 55%;
+    --sidebar-primary-foreground: 214 30% 96%;
+    --sidebar-accent: 214 25% 91%;
+    --sidebar-accent-foreground: 220 47% 11%;
+    --sidebar-border: 215 20% 82%;
+    --sidebar-ring: 222 100% 55%;
   }
 
   .dark {
-    --background: 222 47% 8%;
-    --foreground: 210 40% 98%;
+    --background: 220 47% 8%;
+    --foreground: 214 30% 96%;
 
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 47% 8%;
+    --card-foreground: 214 30% 96%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 47% 10%;
+    --popover-foreground: 214 30% 96%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
+    --primary: 222 95% 65%;
+    --primary-foreground: 220 47% 8%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 30% 14%;
+    --secondary-foreground: 214 30% 96%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 30% 14%;
+    --muted-foreground: 215 18% 65%;
 
-    --accent: 142 76% 46%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 222 95% 65%;
+    --accent-foreground: 220 47% 8%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 60%;
+    --destructive-foreground: 220 47% 8%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 217 91% 60%;
+    --border: 215 20% 22%;
+    --input: 215 20% 22%;
+    --ring: 222 95% 65%;
 
-    --success: 142 76% 46%;
-    --warning: 38 92% 50%;
-    --info: 199 89% 58%;
-    
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --success: 175 60% 55%;
+    --warning: 244 60% 70%;
+    --info: 215 19% 65%;
   }
 }
 
@@ -110,30 +93,94 @@
     @apply border-border;
   }
 
+  html {
+    font-family: "Inter", system-ui, sans-serif;
+    font-feature-settings: "cv11", "ss01", "ss03";
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  .font-mono,
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-feature-settings: "tnum" on, "zero" on;
   }
 }
 
 @layer utilities {
-  .gradient-primary {
-    background: var(--gradient-primary);
+  /* regua horizontal estilo extrato — mais firme que border-b padrao */
+  .rule {
+    border-bottom: 1px solid hsl(var(--foreground) / 0.12);
   }
-  
-  .gradient-hero {
-    background: var(--gradient-hero);
+  .rule-strong {
+    border-bottom: 1px solid hsl(var(--foreground));
   }
-  
-  .shadow-card {
-    box-shadow: var(--shadow-card);
+  .rule-dashed {
+    border-bottom: 1px dashed hsl(var(--foreground) / 0.25);
   }
-  
-  .shadow-elevated {
-    box-shadow: var(--shadow-elevated);
+
+  /* leader dots: pontilhado entre label (esq) e valor (dir).
+     uso: <div class="leader"><span>Label</span><span>Valor</span></div> */
+  .leader {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
   }
-  
-  .shadow-glow {
-    box-shadow: var(--shadow-glow);
+  .leader::before {
+    content: "";
+    border-bottom: 1px dotted hsl(var(--foreground) / 0.25);
+    margin: 0 0.5rem;
+    transform: translateY(-0.2em);
+    grid-column: 2;
+  }
+  .leader > :first-child {
+    grid-column: 1;
+  }
+  .leader > :last-child {
+    grid-column: 3;
+  }
+
+  /* small caps com tracking — usado em labels e tags */
+  .smallcaps {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-feature-settings: "tnum" on;
+  }
+
+  /* tag em colchetes — substitui badges flutuantes */
+  .tag-bracket::before {
+    content: "[";
+    padding-right: 0.15em;
+  }
+  .tag-bracket::after {
+    content: "]";
+    padding-left: 0.15em;
+  }
+
+  /* fade in suave para resultados */
+  @keyframes ledger-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .ledger-in {
+    animation: ledger-in 220ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  input[type="text"]::-webkit-outer-spin-button,
+  input[type="text"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
 }

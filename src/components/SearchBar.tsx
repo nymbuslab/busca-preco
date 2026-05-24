@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Camera, Loader2, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Camera, Loader2, X } from "lucide-react";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -58,68 +56,89 @@ export function SearchBar({ onSearch, onClear, isLoading = false, debounceMs = 3
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto" role="search">
+      <form onSubmit={handleSubmit} className="w-full" role="search">
         <label htmlFor="product-search" className="sr-only">
           Buscar produto por código de barras
         </label>
-        <div className="flex flex-col gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            <Input
-              id="product-search"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              autoComplete="off"
-              placeholder="Código de barras..."
-              value={query}
-              onChange={handleInputChange}
-              aria-label="Digite o código de barras do produto"
-              aria-controls="search-results"
-              className="pl-10 pr-20 h-12 text-base shadow-card focus:shadow-glow transition-shadow"
-            />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-              {query.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="p-1.5 rounded-md hover:bg-secondary transition-colors"
-                  title="Limpar busca"
-                  aria-label="Limpar campo de busca"
-                >
-                  <X className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" aria-hidden="true" />
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setIsScannerOpen(true)}
-                className="p-1.5 rounded-md hover:bg-secondary transition-colors"
-                title="Escanear código de barras"
-                aria-label="Abrir scanner de código de barras"
-              >
-                <Camera className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-          <Button
+
+        <div className="flex items-baseline justify-between rule-strong pb-1">
+          <span className="smallcaps text-[10px] font-mono">
+            Código de barras
+          </span>
+          <span className="font-mono text-[10px] text-muted-foreground">
+            {query.length > 0 ? `${query.length} dig` : "0 dig"}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 py-3 border-b border-foreground/15">
+          <input
+            id="product-search"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete="off"
+            placeholder="0000000000000"
+            value={query}
+            onChange={handleInputChange}
+            aria-label="Digite o código de barras do produto"
+            aria-controls="search-results"
+            className="flex-1 bg-transparent font-mono text-2xl md:text-3xl tracking-[0.08em] placeholder:text-muted-foreground/40 focus:outline-none"
+          />
+
+          {query.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClear}
+              title="Limpar busca"
+              aria-label="Limpar campo de busca"
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsScannerOpen(true)}
+            title="Escanear código de barras"
+            aria-label="Abrir scanner de código de barras"
+            className="p-2 text-foreground/70 hover:text-primary transition-colors"
+          >
+            <Camera className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <p className="font-mono text-[10px] text-muted-foreground">
+            <span className="smallcaps">Enter</span> para consultar
+          </p>
+
+          <button
             type="submit"
-            size="lg"
             disabled={isLoading || !query.trim()}
-            className="w-full h-12 gradient-primary shadow-card hover:shadow-glow transition-all"
             aria-busy={isLoading}
+            className="
+              inline-flex items-center gap-2
+              bg-foreground text-background
+              px-5 py-2.5
+              smallcaps text-xs font-medium
+              transition-all
+              hover:bg-primary hover:text-primary-foreground
+              disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background
+            "
           >
             {isLoading ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin mr-2" aria-hidden="true" />
-                <span>Buscando...</span>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                <span>Consultando</span>
               </>
             ) : (
               <>
-                <Search className="h-5 w-5 mr-2" aria-hidden="true" />
-                Pesquisar
+                <span>Consultar</span>
+                <span aria-hidden="true">→</span>
               </>
             )}
-          </Button>
+          </button>
         </div>
       </form>
 
