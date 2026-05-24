@@ -46,12 +46,13 @@ Aplicação web para consulta rápida de preço, estoque e histórico de custo d
 **Tabela `produto` (MySQL, singular)** — colunas usadas:
 
 - `cod_produto` (int, PK)
-- `produto` (string, descrição)
-- `cod_barras` (string, nullable)
-- `valor_venda1` (decimal) — preço de venda
-- `qtd_estoque` (int, nullable)
-- `valor_compra` (decimal, nullable) — **valor da última compra (= custo atual)**
+- `produto` (varchar(60), descrição)
+- `cod_barras` (varchar(20), nullable) — só este, **não** mexer em `cod_barras_emb`/`cod_barras_cx`
+- `valor_venda1` (double(15,3)) — preço de venda
+- `qtd_estoque` (**double(15,3)**, nullable) — pode ser fracionário (KG, gramas), por isso `estoque: Optional[float]` no `APIProduct`
+- `valor_compra` (double(15,4), nullable) — **valor da última compra (= custo atual)**
 - `data_ultima_compra` (date, nullable) — data da última compra
+- `ativo` (varchar(1)) — filtro `ativo = 'S'` aplicado em todas as queries para esconder produtos descontinuados
 
 **Tabelas mensais `itens_compra_MMYY`** — histórico de custo, com **rotação mensal**:
 

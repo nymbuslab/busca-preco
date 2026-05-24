@@ -52,7 +52,7 @@ class APIProduct(BaseModel):
     produto: str
     cod_barras: Optional[str]
     valor_venda1: float
-    estoque: Optional[int]
+    estoque: Optional[float]
     valor_custo_atual: Optional[float]
     valor_custo_15dias: Optional[float]
     valor_custo_30dias: Optional[float]
@@ -252,13 +252,13 @@ async def buscar_por_barras(barcode: str):
     exatos_query = f"""
         SELECT {PRODUTO_COLS}
         FROM produto
-        WHERE cod_barras = %s
+        WHERE cod_barras = %s AND ativo = 'S'
         LIMIT 10
     """
     similares_query = f"""
         SELECT {PRODUTO_COLS}
         FROM produto
-        WHERE cod_barras LIKE %s AND cod_barras != %s
+        WHERE cod_barras LIKE %s AND cod_barras != %s AND ativo = 'S'
         LIMIT 10
     """
 
@@ -278,13 +278,13 @@ async def buscar_por_descricao(query: str):
     exatos_query = f"""
         SELECT {PRODUTO_COLS}
         FROM produto
-        WHERE UPPER(produto) = UPPER(%s)
+        WHERE UPPER(produto) = UPPER(%s) AND ativo = 'S'
         LIMIT 10
     """
     similares_query = f"""
         SELECT {PRODUTO_COLS}
         FROM produto
-        WHERE UPPER(produto) LIKE UPPER(%s) AND UPPER(produto) != UPPER(%s)
+        WHERE UPPER(produto) LIKE UPPER(%s) AND UPPER(produto) != UPPER(%s) AND ativo = 'S'
         ORDER BY produto ASC
         LIMIT 20
     """
