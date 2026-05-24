@@ -191,11 +191,13 @@ app = FastAPI(title="Busca Preco API", version="1.0.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        # producao
+        "https://buscapreco.com",
+        "https://www.buscapreco.com",
+        # dev local
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:8080",
-        "https://busca-preco-plum.vercel.app",
-        "https://companies-ten-horizon-realtor.trycloudflare.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
