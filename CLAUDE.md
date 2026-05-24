@@ -173,7 +173,7 @@ O `serve.log` registra no startup a config MySQL resolvida (host/porta/db, **sem
 3. **Mantenha SQL parametrizado.** Os endpoints aceitam input arbitrário direto na URL — sem placeholder vira SQL injection imediato. A **única** parte da query montada por interpolação é o nome da tabela `itens_compra_MMYY`, calculado pelo servidor (nunca vem do usuário).
 4. **Não trocar o join por `cod_produto`** nas tabelas de histórico. O join correto é por `cod_barras`.
 5. **Nomes de campos no JSON são contrato com o frontend** — `valor_custo_15dias`/`valor_custo_30dias`/`data_custo_*` continuam mesmo quando conceitualmente são "mês anterior" / "2 meses atrás". Renomear quebra `Index.tsx` e `ProductCard.tsx`.
-6. **Scanner zxing:** prioriza câmera traseira procurando `back`/`environment`/`traseira` no `device.label`. Em desktop sem câmera traseira, cai no primeiro device disponível.
+6. **Scanner — duplo motor com viewfinder:** [src/components/BarcodeScanner.tsx](src/components/BarcodeScanner.tsx) usa `BarcodeDetector` nativo (Chrome/Edge/Safari iOS 17+, ~10× mais rápido) quando disponível e cai pra `@zxing/browser` no resto (Firefox, browsers antigos). Ambos priorizam câmera traseira via `facingMode: environment`. Overlay CSS marca a janela de leitura (4 cantos + scan line animada). Badge no canto superior direito mostra qual motor está rodando (`Nativo`/`ZXing`).
 7. **`react-query` está configurado mas subutilizado** — antes de adicionar `useQuery`, decidir se vale migrar `Index.tsx` para usar o cache (hoje cada busca refaz fetch).
 
 ## Bibliotecas para consulta no Context7
