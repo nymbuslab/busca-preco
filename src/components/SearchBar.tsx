@@ -34,7 +34,7 @@ export function SearchBar({ onSearch, onClear, isLoading = false, debounceMs = 3
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const value = e.target.value.replace(/\D/g, "");
     setQuery(value);
     if (value.length > 0) {
       setHasInteracted(true);
@@ -60,7 +60,7 @@ export function SearchBar({ onSearch, onClear, isLoading = false, debounceMs = 3
     <>
       <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto" role="search">
         <label htmlFor="product-search" className="sr-only">
-          Buscar produto por código de barras ou descrição
+          Buscar produto por código de barras
         </label>
         <div className="flex flex-col gap-3">
           <div className="relative">
@@ -68,12 +68,14 @@ export function SearchBar({ onSearch, onClear, isLoading = false, debounceMs = 3
             <Input
               id="product-search"
               type="text"
-              placeholder="Código de barras ou descrição..."
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              placeholder="Código de barras..."
               value={query}
               onChange={handleInputChange}
-              aria-label="Digite o código de barras ou descrição do produto para buscar"
+              aria-label="Digite o código de barras do produto"
               aria-controls="search-results"
-              aria-autocomplete="list"
               className="pl-10 pr-20 h-12 text-base shadow-card focus:shadow-glow transition-shadow"
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">

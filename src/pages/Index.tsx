@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { Product } from "@/types/product";
@@ -99,13 +99,13 @@ export default function Index() {
   const [hasSearched, setHasSearched] = useState(false);
   const [currentQuery, setCurrentQuery] = useState("");
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     setResults({ exatos: [], similares: [] });
     setHasSearched(false);
     setCurrentQuery("");
-  };
+  }, []);
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = useCallback(async (query: string) => {
     if (!query.trim()) return;
 
     setCurrentQuery(query);
@@ -114,10 +114,7 @@ export default function Index() {
     setResults({ exatos: [], similares: [] });
 
     try {
-      const isBarcode = /^\d+$/.test(query);
-      const endpoint = isBarcode 
-        ? `${API_BASE_URL}/produtos/barras/${encodeURIComponent(query)}`
-        : `${API_BASE_URL}/produtos/descricao/${encodeURIComponent(query)}`;
+      const endpoint = `${API_BASE_URL}/produtos/barras/${encodeURIComponent(query)}`;
 
       const response = await fetch(endpoint);
 
@@ -136,7 +133,7 @@ export default function Index() {
       setResults({ exatos, similares });
 
       if (exatos.length === 0 && similares.length === 0) {
-        toast.info("Nenhum produto encontrado");
+        toast.info("Código de barras não encontrado");
       } else if (exatos.length > 0 && similares.length > 0) {
         toast.success(`Encontrado: ${exatos.length} exato(s) e ${similares.length} similar(es)`);
       }
@@ -146,7 +143,7 @@ export default function Index() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const totalResults = results.exatos.length + results.similares.length;
 
@@ -240,15 +237,15 @@ export default function Index() {
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <Package className="h-16 w-16 mb-4 opacity-30" />
               <p className="text-lg font-medium">Produto não encontrado</p>
-              <p className="text-sm">Tente buscar por outro código ou descrição</p>
+              <p className="text-sm">Confira o código de barras ou escaneie de novo</p>
             </div>
           )}
 
           {!hasSearched && (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <Search className="h-16 w-16 mb-4 opacity-20" />
-              <p className="text-lg font-medium">Digite para pesquisar</p>
-              <p className="text-sm">Use o código de barras ou nome do produto</p>
+              <p className="text-lg font-medium">Digite ou escaneie o código de barras</p>
+              <p className="text-sm">Use o leitor da câmera ou digite os números</p>
             </div>
           )}
         </section>
