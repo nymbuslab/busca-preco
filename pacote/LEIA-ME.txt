@@ -1,0 +1,211 @@
+============================================================
+   BUSCA PRECO — INSTALADOR
+============================================================
+
+Este pacote instala a API "Busca Preco" como servico Windows
+no servidor do cliente. Ele se conecta ao MySQL local lendo a
+configuracao automaticamente do config.ini do ERP GR7.
+
+>>> PREFIRA O MANUAL VISUAL: abra MANUAL.html no navegador.
+    Tem todos os passos com imagens, ordem clara, captions, e
+    secao de troubleshooting bem organizada.
+
+Este LEIA-ME.txt e um resumo textual abreviado para terminais
+sem navegador grafico ou para consulta rapida.
+
+
+PRE-REQUISITOS
+------------------------------------------------------------
+
+  - Windows (Server ou Pro/Enterprise) com privilegios de admin
+  - MySQL rodando no servidor com a base de dados do ERP
+  - Arquivo config.ini do ERP presente em D:\GR7\GR7\ (ou onde
+    estiver instalado). O instalador NAO mexe nesse arquivo —
+    apenas le.
+  - Internet (so para o Cloudflare Tunnel; a API em si funciona
+    offline)
+
+
+O QUE TEM NA PASTA
+------------------------------------------------------------
+
+  BuscaPrecoAPI\        Aplicacao empacotada (Python + deps)
+   |- BuscaPrecoAPI.exe
+   |- _internal\        runtime do Python (nao mexer)
+
+  cloudflared.exe       Cloudflare Tunnel — expoe a API em HTTPS
+  nssm.exe              Service manager — registra como Windows
+                        Service
+
+  tunnel\
+   |- config.yml.exemplo  modelo do tunnel nomeado
+                          (renomear para config.yml depois de
+                           preencher; ver secao adiante)
+
+  instalar.bat          registra os servicos
+  desinstalar.bat       remove os servicos (nao apaga arquivos)
+  LEIA-ME.txt           este arquivo
+  logs\                 criada na primeira execucao
+
+
+COMO INSTALAR
+------------------------------------------------------------
+
+  1. Descompactar este ZIP em uma pasta ao lado do ERP. Sugestao:
+
+       D:\GR7\GR7\BuscaPreco\
+
+     A estrutura final fica:
+
+       D:\GR7\GR7\
+        |- config.ini           ← do ERP, ja existe
+        |- BuscaPreco\          ← pasta deste pacote
+            |- BuscaPrecoAPI\
+            |- instalar.bat
+            |- ...
+
+     A API descobre o config.ini sozinha subindo ate 2 pastas
+     a partir do BuscaPrecoAPI.exe.
+
+  2. Clicar com botao direito em "instalar.bat" e escolher
+     "Executar como administrador".
+
+  3. Confirmar que apareceu:
+
+       [1/2] Registrando servico BuscaPrecoAPI...
+            OK
+
+     Se o tunnel ainda nao estiver configurado, vai aparecer:
+
+       [2/2] Servico BuscaPrecoTunnel NAO instalado.
+            Motivo: tunnel\config.yml nao encontrado.
+
+     Isso e esperado na primeira instalacao — configure o tunnel
+     depois (secao seguinte).
+
+  4. Validar que a API esta no ar. Em qualquer browser do
+     proprio servidor:
+
+       http://localhost:8000/docs
+
+     Deve abrir a documentacao Swagger.
+
+
+COMO CONFIGURAR O CLOUDFLARE TUNNEL
+------------------------------------------------------------
+
+  Pre-condicao: o cliente ja precisa ter um dominio cadastrado
+  na Cloudflare (gratis se ja tem dominio em outro registrador
+  — basta apontar os nameservers para a Cloudflare).
+
+  No servidor do cliente, em PowerShell ADMINISTRADOR, dentro
+  da pasta deste pacote:
+
+  1. Autenticar com a conta Cloudflare:
+
+       .\cloudflared.exe tunnel login
+
+     Abre o navegador, voce escolhe o dominio do cliente,
+     autoriza. Gera credenciais em %USERPROFILE%\.cloudflared\
+
+  2. Criar o tunnel:
+
+       .\cloudflared.exe tunnel create busca-preco
+
+     Imprime um UUID (anote) e cria um arquivo .json em
+     %USERPROFILE%\.cloudflared\<UUID>.json
+
+  3. Preencher e renomear o tunnel\config.yml.exemplo:
+
+     - abrir tunnel\config.yml.exemplo em um editor
+     - trocar <TUNNEL-ID> pelo UUID do passo 2
+     - trocar <CAMINHO-DO-JSON> pelo caminho completo do .json
+     - trocar <SUBDOMINIO-DO-CLIENTE> pelo subdominio escolhido
+       (ex: api.empresa.com.br)
+     - SALVAR como "config.yml" (sem o .exemplo)
+
+  4. Apontar o DNS (cria registro CNAME automatico):
+
+       .\cloudflared.exe tunnel route dns busca-preco <SUBDOMINIO>
+
+  5. Rodar instalar.bat novamente como admin — ele detecta o
+     config.yml e registra o servico BuscaPrecoTunnel.
+
+  6. Validar que o tunnel esta no ar:
+
+       sc query BuscaPrecoTunnel       (deve mostrar RUNNING)
+
+     E o endpoint publico responde:
+
+       https://<SUBDOMINIO>/docs
+
+
+VARIAVEL DE AMBIENTE NO VERCEL
+------------------------------------------------------------
+
+  No painel do Vercel, projeto busca-preco-plum:
+
+    Settings -> Environment Variables -> Add new
+       Key:   VITE_API_URL
+       Value: https://<SUBDOMINIO-CONFIGURADO>
+       Envs:  Production, Preview, Development
+
+  Em seguida, Deployments -> Redeploy (desmarque "Use existing
+  build cache" para forcar rebuild com a env nova).
+
+  A partir desse momento, o frontend hospedado no Vercel
+  comeca a chamar a API do cliente atraves do tunnel.
+
+
+VERIFICACOES UTEIS
+------------------------------------------------------------
+
+  - Servicos rodando?
+       sc query BuscaPrecoAPI
+       sc query BuscaPrecoTunnel
+
+  - Reiniciar manualmente?
+       sc stop BuscaPrecoAPI  &&  sc start BuscaPrecoAPI
+
+  - Logs em tempo real (PowerShell):
+       Get-Content logs\api.log -Wait -Tail 50
+       Get-Content logs\tunnel.log -Wait -Tail 50
+
+  - API esta respondendo?
+       curl http://localhost:8000/docs
+
+
+DESINSTALAR
+------------------------------------------------------------
+
+  Botao direito em "desinstalar.bat" -> "Executar como
+  administrador". Os servicos sao parados e removidos. Os
+  arquivos da pasta nao sao apagados — para limpar tudo, basta
+  apagar a pasta depois.
+
+
+TROUBLESHOOTING
+------------------------------------------------------------
+
+  Erro: "BuscaPrecoAPI.exe nao iniciou"
+    -> Cheque logs\api.log. Causas mais comuns:
+       a) MySQL nao esta rodando
+       b) Credenciais errados no config.ini (Servidor, Base_Dados)
+       c) Outro processo ja na porta 8000 (sc query | findstr 8000)
+
+  Erro: "Failed to load Python DLL"
+    -> A pasta BuscaPrecoAPI\_internal\ esta incompleta ou
+       danificada. Recopie ou recompacte o ZIP.
+
+  Erro: "Tunnel nao conecta"
+    -> Verifique:
+       a) cloudflared.exe versao recente (--version)
+       b) credenciais .json no caminho indicado em config.yml
+       c) DNS apontado corretamente (.\cloudflared.exe tunnel info)
+
+
+CONTATO
+------------------------------------------------------------
+
+  Nymbus Lab / GR7 Automacao Comercial
+  suporte@gr7autocom.com.br

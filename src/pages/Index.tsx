@@ -137,7 +137,7 @@ export default function Index() {
       <header className="w-full border-b border-foreground/15">
         <div className="max-w-3xl mx-auto px-6 py-6 flex items-baseline justify-between">
           <h1 className="text-2xl font-semibold leading-none tracking-tight">
-            Consulta<span className="text-primary">.</span>Preço
+            Busca<span className="text-primary">.</span>Preço
           </h1>
           <span className="smallcaps text-[10px] text-muted-foreground font-mono">
             Sistema interno · v1.0

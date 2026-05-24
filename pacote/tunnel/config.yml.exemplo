@@ -1,0 +1,40 @@
+# ============================================================
+# Cloudflare Tunnel — configuracao do tunnel NOMEADO.
+#
+# Quando o dominio do cliente estiver configurado na Cloudflare,
+# preencha as 3 variaveis abaixo e renomeie este arquivo para:
+#   config.yml
+#
+# ============================================================
+#
+# PASSO A PASSO (executar no servidor do cliente, em PowerShell admin):
+#
+#   1. Cria o tunnel (so na primeira instalacao do cliente):
+#         cloudflared.exe tunnel login
+#         cloudflared.exe tunnel create busca-preco-<NOME_CLIENTE>
+#
+#      Isso imprime um UUID e cria um arquivo .json em:
+#         %USERPROFILE%\.cloudflared\<UUID>.json
+#
+#   2. Substitua nos campos abaixo:
+#      - <TUNNEL-ID>           o UUID retornado acima
+#      - <CAMINHO-DO-JSON>     caminho completo do arquivo .json
+#      - <SUBDOMINIO-DO-CLIENTE>  ex: api.empresa.com.br
+#
+#   3. Renomeie este arquivo de "config.yml.exemplo" para "config.yml"
+#
+#   4. Aponte o DNS (cria CNAME automatico na Cloudflare):
+#         cloudflared.exe tunnel route dns busca-preco-<NOME_CLIENTE> <SUBDOMINIO-DO-CLIENTE>
+#
+#   5. Rode o instalar.bat novamente — ele detecta o config.yml
+#      e registra o servico BuscaPrecoTunnel.
+#
+# ============================================================
+
+tunnel: <TUNNEL-ID>
+credentials-file: <CAMINHO-DO-JSON>
+
+ingress:
+  - hostname: <SUBDOMINIO-DO-CLIENTE>
+    service: http://localhost:8000
+  - service: http_status:404

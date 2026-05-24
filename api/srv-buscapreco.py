@@ -1,5 +1,5 @@
 # ============================================================
-#  serve.py — Inicia a API Busca Preco em modo SERVICO (producao)
+#  srv-buscapreco.py — Inicia a API Busca Preco em modo SERVICO (producao)
 #  - Arquivo unico: settings + models + endpoints + pool MySQL
 #  - Servidor ASGI: uvicorn (FastAPI nao roda em waitress)
 #  - Bind 0.0.0.0 para LAN (caixas/balcoes alcancam pela rede)
@@ -15,6 +15,7 @@
 # ============================================================
 
 import configparser
+import sys
 from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
@@ -27,6 +28,33 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
+
+
+def app_dir() -> Path:
+    """
+    Pasta onde a aplicacao 'vive' (entrega) em runtime.
+    - Modo dev (python srv-buscapreco.py)       -> pasta do .py
+    - Modo empacotado (PyInstaller .exe)        -> pasta do .exe
+    """
+    if getattr(sys, "frozen", False):
+        # PyInstaller (onefile e onedir): sys.executable aponta para o .exe
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+def find_config_ini() -> Optional[Path]:
+    """
+    Procura config.ini comecando pela pasta da aplicacao e subindo
+    ate 2 niveis. Permite colocar o exe em subpasta dentro de GR7\\GR7
+    sem precisar duplicar config.ini.
+    """
+    base = app_dir()
+    for candidate in (base / "config.ini",
+                      base.parent / "config.ini",
+                      base.parent.parent / "config.ini"):
+        if candidate.exists():
+            return candidate
+    return None
 
 
 # ------------------------------------------------------------
@@ -47,7 +75,7 @@ class Settings(BaseSettings):
 
 def carregar_config_ini() -> Dict[str, object]:
     """
-    Le config.ini ao lado de serve.py e devolve overrides para Settings.
+    Le config.ini (formato GR7) e devolve overrides para Settings.
     Retorna dict vazio se o arquivo nao existir (modo DEV).
 
     Convencao do GR7 na secao [Configuracoes]:
@@ -56,8 +84,8 @@ def carregar_config_ini() -> Dict[str, object]:
       Base_Dados=<nome>     -> nome do schema MySQL
       MySQL_Porta=<int>     -> porta MySQL
     """
-    ini_path = Path(__file__).parent / "config.ini"
-    if not ini_path.exists():
+    ini_path = find_config_ini()
+    if ini_path is None:
         return {}
 
     parser = configparser.ConfigParser(
@@ -166,6 +194,8 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:8080",
+        "https://busca-preco-plum.vercel.app",
+        "https://companies-ten-horizon-realtor.trycloudflare.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -349,7 +379,7 @@ async def buscar_por_descricao(query: str):
 
 
 # ------------------------------------------------------------
-# Entrypoint — `python api/serve.py`
+# Entrypoint — `python api/srv-buscapreco.py`
 # ------------------------------------------------------------
 HOST = "0.0.0.0"
 PORT = 8000
@@ -357,6 +387,9 @@ PORT = 8000
 
 def main():
     print(f"[OK] Busca Preco API rodando em http://{HOST}:{PORT}")
+    print(f"[OK] App dir: {app_dir()}")
+    ini = find_config_ini()
+    print(f"[OK] config.ini: {ini if ini else '(nao encontrado, usando defaults)'}")
     print(
         f"[OK] MySQL: {settings.mysql_user}@{settings.mysql_host}:"
         f"{settings.mysql_port}/{settings.mysql_database}"

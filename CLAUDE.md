@@ -33,7 +33,7 @@ Aplicação web para consulta rápida de preço, estoque e histórico de custo d
 │   ├── types/product.ts       # Tipos de domínio (Product, PriceHistory)
 │   └── test/                  # Setup do Vitest
 ├── api/                       # Backend FastAPI — arquivo unico
-│   ├── serve.py               # Settings + models + pool MySQL + endpoints + entrypoint uvicorn
+│   ├── srv-buscapreco.py               # Settings + models + pool MySQL + endpoints + entrypoint uvicorn
 │   └── requirements.txt
 ├── public/
 ├── vite.config.ts             # alias "@" → ./src, dev em :8080
@@ -58,7 +58,7 @@ Aplicação web para consulta rápida de preço, estoque e histórico de custo d
 
 - A cada virada de mês, o ERP do cliente renomeia a tabela `itens_compra` corrente para `itens_compra_MMYY` (ex: `itens_compra_0426` = abril/2026, `itens_compra_0326` = março/2026).
 - Colunas: `cod_barras`, `custo`, `data` (+ outras não usadas aqui).
-- A API calcula o nome em runtime via `tabela_itens_compra(meses_atras)` em [api/serve.py](api/serve.py).
+- A API calcula o nome em runtime via `tabela_itens_compra(meses_atras)` em [api/srv-buscapreco.py](api/srv-buscapreco.py).
 - `valor_custo_15dias` ← linha de maior `data` do mês anterior (`meses_atras=1`).
 - `valor_custo_30dias` ← linha de maior `data` de 2 meses atrás (`meses_atras=2`).
 - **Join é por `cod_barras`** (não por `cod_produto`).
@@ -83,9 +83,9 @@ Heurística do frontend (`Index.tsx`): se o input casa `/^\d+$/`, chama `/barras
 
 **Backend — hierarquia de configuração (do mais forte para o mais fraco):**
 
-1. **`config.ini` na mesma pasta de `serve.py`** (produção no cliente — formato do GR7).
+1. **`config.ini` na mesma pasta de `srv-buscapreco.py`** (produção no cliente — formato do GR7).
 2. `.env` na pasta atual de execução (override de dev).
-3. Defaults no código de [api/serve.py](api/serve.py).
+3. Defaults no código de [api/srv-buscapreco.py](api/srv-buscapreco.py).
 
 **`config.ini` (formato GR7, seção `[Configuracoes]`):**
 
@@ -100,9 +100,9 @@ Parser tolerante: aceita `[Configuracoes]` repetido (arquivo do GR7 tem 2 vezes)
 
 - `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`
 
-**`mysql_user` e `mysql_password` não estão no `config.ini` do GR7** — ficam hardcoded em [serve.py](api/serve.py) (`automacao`/`rm123`) e podem ser sobrescritos via `.env`.
+**`mysql_user` e `mysql_password` não estão no `config.ini` do GR7** — ficam hardcoded em [srv-buscapreco.py](api/srv-buscapreco.py) (`automacao`/`rm123`) e podem ser sobrescritos via `.env`.
 
-`HOST` e `PORT` do uvicorn são constantes no topo do `serve.py` (`0.0.0.0:8000`). CORS é hardcoded (`localhost:3000/5173/8080`) — quando o site estiver no Vercel, **adicionar a URL pública à lista `allow_origins` direto no arquivo**.
+`HOST` e `PORT` do uvicorn são constantes no topo do `srv-buscapreco.py` (`0.0.0.0:8000`). CORS é hardcoded (`localhost:3000/5173/8080`) — quando o site estiver no Vercel, **adicionar a URL pública à lista `allow_origins` direto no arquivo**.
 
 ## Padrões de Código
 
@@ -110,7 +110,7 @@ Parser tolerante: aceita `[Configuracoes]` repetido (arquivo do GR7 tem 2 vezes)
 - **Frontend:** componentes funcionais com hooks. Alias `@` → `./src` (configurado em `vite.config.ts` e `tsconfig.app.json`).
 - **Estado de busca:** local no `Index.tsx` (não há store global). TanStack Query está instalado mas a busca atual usa `fetch` direto — uso de Query Client está apenas no provider.
 - **Toasts:** preferir `sonner` (já usado em `Index.tsx`); evitar duplicar com o `Toaster` de shadcn.
-- **Backend:** **arquivo único `api/serve.py`** com settings + models + pool + endpoints + entrypoint. Não voltar a fragmentar em vários módulos. Queries SQL parametrizadas (placeholders `%s` do aiomysql). **Não concatenar input em SQL.** Lista de origens CORS é hardcoded — editar direto no arquivo quando precisar liberar nova URL.
+- **Backend:** **arquivo único `api/srv-buscapreco.py`** com settings + models + pool + endpoints + entrypoint. Não voltar a fragmentar em vários módulos. Queries SQL parametrizadas (placeholders `%s` do aiomysql). **Não concatenar input em SQL.** Lista de origens CORS é hardcoded — editar direto no arquivo quando precisar liberar nova URL.
 - **Mapeamento API → domínio:** feito em `Index.tsx#mapApiToProduct`. Se o tipo `APIProduct` mudar no backend, ajustar lá.
 
 ## Comandos Úteis
@@ -126,21 +126,21 @@ bun run test             # vitest run
 # Backend (a partir da raiz do projeto)
 .venv\Scripts\Activate.ps1                  # PowerShell
 pip install -r api/requirements.txt
-python api/serve.py                         # producao (uvicorn 0.0.0.0:8000)
-# dev com hot reload:
-uvicorn api.serve:app --reload --port 8000
+python api/srv-buscapreco.py                # roda uvicorn em 0.0.0.0:8000
 ```
+
+> Não há comando `uvicorn` direto — o nome do arquivo usa hífen (`srv-buscapreco.py`), inválido como nome de módulo Python. O entrypoint sempre é via `python <arquivo>.py`.
 
 ## Deploy no servidor do cliente
 
-Em produção, copiar **apenas o `serve.py`** (e o `.venv` ou um Python global com as deps) para dentro da pasta GR7 do cliente — ex: `D:\GR7\GR7\serve.py`. O `config.ini` que o ERP já mantém na mesma pasta é lido automaticamente, então **nenhum ajuste manual de host/porta/banco é necessário**, independente da letra do drive.
+Em produção, copiar **apenas o `srv-buscapreco.py`** (e o `.venv` ou um Python global com as deps) para dentro da pasta GR7 do cliente — ex: `D:\GR7\GR7\srv-buscapreco.py`. O `config.ini` que o ERP já mantém na mesma pasta é lido automaticamente, então **nenhum ajuste manual de host/porta/banco é necessário**, independente da letra do drive.
 
 Estrutura esperada no cliente:
 
 ```text
 <DRIVE>\<...>\GR7\GR7\
 ├── config.ini       ← já existe (mantido pelo ERP)
-├── serve.py         ← copiar daqui
+├── srv-buscapreco.py         ← copiar daqui
 └── .venv\           ← ou Python global com requirements.txt
 ```
 
@@ -152,10 +152,10 @@ Em PowerShell elevado, dentro da pasta GR7 do cliente:
 # Ajustar os 2 caminhos absolutos abaixo conforme a maquina
 $ROOT = "D:\GR7\GR7"
 
-nssm install BuscaPrecoAPI "$ROOT\.venv\Scripts\python.exe" "$ROOT\serve.py"
+nssm install BuscaPrecoAPI "$ROOT\.venv\Scripts\python.exe" "$ROOT\srv-buscapreco.py"
 nssm set BuscaPrecoAPI AppDirectory "$ROOT"
-nssm set BuscaPrecoAPI AppStdout "$ROOT\serve.log"
-nssm set BuscaPrecoAPI AppStderr "$ROOT\serve.log"
+nssm set BuscaPrecoAPI AppStdout "$ROOT\srv-buscapreco.log"
+nssm set BuscaPrecoAPI AppStderr "$ROOT\srv-buscapreco.log"
 nssm start BuscaPrecoAPI
 
 # Conferir / parar / remover
@@ -164,7 +164,7 @@ nssm stop   BuscaPrecoAPI
 nssm remove BuscaPrecoAPI confirm
 ```
 
-O `serve.log` registra no startup a config MySQL resolvida (host/porta/db, **sem senha**) — útil pra diagnosticar quando o `config.ini` mudar.
+O `srv-buscapreco.log` registra no startup a config MySQL resolvida (host/porta/db, **sem senha**) — útil pra diagnosticar quando o `config.ini` mudar.
 
 ## Regras de Desenvolvimento específicas do projeto
 
@@ -196,6 +196,6 @@ O `serve.log` registra no startup a config MySQL resolvida (host/porta/db, **sem
 
 - Não é repositório Git ainda — inicializado durante `iniciar-sessao` em 2026-05-23.
 - README é o boilerplate do Lovable — atualizar ou substituir.
-- **Backend consolidado em `api/serve.py`** (2026-05-23). Padrão: arquivo único como entrypoint, igual ao `serve.py` do GR7 Gestão. Sem mais `main.py`/`models.py`/`config.py`/`database.py`.
+- **Backend consolidado em `api/srv-buscapreco.py`** (2026-05-23). Padrão: arquivo único como entrypoint, igual ao `srv-buscapreco.py` do GR7 Gestão. Sem mais `main.py`/`models.py`/`config.py`/`database.py`.
 - **Lógica da API mantida idêntica** à versão anterior (defaults MySQL no código, CORS hardcoded). A consolidação foi apenas estrutural — não mexer no comportamento sem combinação prévia.
 - Sem suite de testes real além do exemplo de Vitest.

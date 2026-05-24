@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Manual de Instalação · Busca Preço</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:       #F1F4F8;
+    --ink:      #0F1729;
+    --ink-60:   #475569;
+    --ink-30:   #94A3B8;
+    --line:     #CBD5E1;
+    --primary:  #1B5EFF;
+    --teal:     #0F766E;
+    --indigo:   #4338CA;
+    --warn-bg:  #FEF3C7;
+    --warn-bd:  #F59E0B;
+    --ok-bg:    #DCFCE7;
+    --ok-bd:    #16A34A;
+    --err-bg:   #FEE2E2;
+    --err-bd:   #DC2626;
+  }
+  * { box-sizing: border-box; }
+  html { font-feature-settings: "cv11","ss01","ss03"; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 800px; margin: 0 auto; padding: 56px 32px 96px; }
+
+  header.cap {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+    margin-bottom: 40px;
+  }
+  header.cap .kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    color: var(--ink-60);
+    margin: 0 0 8px 0;
+  }
+  header.cap h1 {
+    font-size: 38px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 0 0 12px 0;
+  }
+  header.cap h1 .accent { color: var(--primary); }
+  header.cap .sub {
+    color: var(--ink-60);
+    font-size: 16px;
+    margin: 0;
+  }
+
+  h2 {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    color: var(--ink);
+    margin: 56px 0 0 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--ink);
+  }
+  h3 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 32px 0 12px 0;
+  }
+  p, li { color: var(--ink); }
+  p { margin: 12px 0; }
+  ul, ol { padding-left: 22px; }
+  ul li, ol li { margin: 6px 0; }
+  a { color: var(--primary); text-decoration: none; border-bottom: 1px solid currentColor; }
+  a:hover { opacity: 0.7; }
+
+  /* Numerador de passo */
+  .step {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 20px;
+    align-items: start;
+    margin: 28px 0;
+  }
+  .step .num {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--primary);
+    border-right: 1px solid var(--line);
+    padding-right: 12px;
+    padding-top: 4px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .step .body h3 { margin-top: 0; }
+
+  /* Bloco de código */
+  pre {
+    background: var(--ink);
+    color: #F1F4F8;
+    padding: 14px 18px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 12px 0;
+    border: 1px solid var(--ink);
+    position: relative;
+  }
+  pre .prompt { color: var(--ink-30); user-select: none; }
+  pre .cmt    { color: var(--ink-30); }
+  pre .var    { color: #FBBF24; }
+  pre .kw     { color: #60A5FA; }
+
+  code:not(pre code) {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.92em;
+    background: #E2E8F0;
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* Caixas de aviso */
+  .box {
+    border-left: 3px solid;
+    background: white;
+    padding: 14px 18px;
+    margin: 18px 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .box.warn { border-color: var(--warn-bd); background: var(--warn-bg); }
+  .box.ok   { border-color: var(--ok-bd);   background: var(--ok-bg);   }
+  .box.err  { border-color: var(--err-bd);  background: var(--err-bg);  }
+  .box.info { border-color: var(--primary); background: white; }
+  .box .label {
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .box.warn .label { color: #B45309; }
+  .box.ok   .label { color: #15803D; }
+  .box.err  .label { color: #991B1B; }
+  .box.info .label { color: var(--primary); }
+  .box p:last-child { margin-bottom: 0; }
+  .box p:first-child { margin-top: 0; }
+
+  /* Sumário */
+  .toc {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 20px 24px;
+    background: white;
+    margin: 28px 0 48px 0;
+  }
+  .toc .label {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    color: var(--ink-60);
+    margin-bottom: 12px;
+  }
+  .toc ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: tocnum;
+  }
+  .toc ol li {
+    counter-increment: tocnum;
+    padding: 6px 0;
+    border-bottom: 1px dotted var(--line);
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    align-items: baseline;
+  }
+  .toc ol li:last-child { border-bottom: none; }
+  .toc ol li::before {
+    content: counter(tocnum, decimal-leading-zero);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    color: var(--ink-30);
+    font-size: 11px;
+  }
+  .toc ol li a { border: none; color: var(--ink); }
+  .toc ol li a:hover { color: var(--primary); }
+
+  /* Tabela */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    color: var(--ink-60);
+    font-weight: 600;
+  }
+  td code { font-size: 0.85em; }
+
+  /* Diagrama */
+  .arch {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 28px 24px;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--ink);
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .arch .blue { color: var(--primary); font-weight: 600; }
+  .arch .gray { color: var(--ink-60); }
+
+  /* Footer */
+  footer.cap {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-60);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    display: flex;
+    justify-content: space-between;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  /* Impressao */
+  @media print {
+    body { background: white; }
+    .page { padding: 20px; }
+    pre { background: #f3f4f6; color: #111; border-color: #d1d5db; }
+    .box { background: white !important; }
+    a { color: var(--ink); border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="cap">
+    <p class="kicker">Manual de instalação · v1.0</p>
+    <h1>Busca<span class="accent">.</span>Preço</h1>
+    <p class="sub">Guia passo a passo para instalar a API no servidor do cliente e conectar ao site público.</p>
+  </header>
+
+  <p>Este manual te leva do ZIP recebido até o site rodando em produção. Não é necessário conhecimento técnico avançado, mas você precisa de <strong>acesso de administrador</strong> no servidor onde o ERP GR7 está instalado e de uma conta na <strong>Cloudflare</strong> com o domínio do cliente cadastrado.</p>
+
+  <div class="toc">
+    <div class="label">Sumário</div>
+    <ol>
+      <li><a href="#arch">Como funciona (visão geral)</a></li>
+      <li><a href="#pre">Pré-requisitos</a></li>
+      <li><a href="#extract">Extrair o pacote</a></li>
+      <li><a href="#tunnel">Configurar o Cloudflare Tunnel</a></li>
+      <li><a href="#install">Rodar o instalador</a></li>
+      <li><a href="#verify">Verificar se está funcionando</a></li>
+      <li><a href="#vercel">Atualizar o site no Vercel</a></li>
+      <li><a href="#troubleshoot">Solução de problemas</a></li>
+      <li><a href="#manage">Operação do dia a dia</a></li>
+    </ol>
+  </div>
+
+  <!-- ========== ARQUITETURA ========== -->
+  <h2 id="arch">Como funciona</h2>
+
+  <p>A API roda <strong>localmente no servidor do cliente</strong> (porque o banco MySQL é local). Um pequeno programa chamado <strong>Cloudflare Tunnel</strong> expõe essa API local para a internet num endereço HTTPS público (ex: <code>https://api.empresa.com.br</code>). O site no Vercel chama esse endereço HTTPS público, que é roteado de volta pra API local.</p>
+
+  <div class="arch"><span class="gray">           Operador (qualquer dispositivo, qualquer lugar)
+                       │
+                       │  HTTPS
+                       ▼
+           </span><span class="blue">busca-preco-plum.vercel.app</span><span class="gray">  (Front)
+                       │
+                       │  HTTPS
+                       ▼
+           </span><span class="blue">api.&lt;empresa&gt;.com.br</span><span class="gray">  (Cloudflare gerencia o cert)
+                       │
+                       │  tunnel
+                       ▼
+           cloudflared (rodando no servidor do cliente)
+                       │
+                       │  HTTP localhost
+                       ▼
+           </span><span class="blue">BuscaPrecoAPI.exe</span><span class="gray"> :8000
+                       │
+                       ▼
+                   MySQL local</span></div>
+
+  <p>Os 2 programas (<code>BuscaPrecoAPI.exe</code> e <code>cloudflared.exe</code>) ficam rodando como <strong>Serviços do Windows</strong> — sobem sozinhos no boot da máquina, sem precisar abrir terminal ou logar.</p>
+
+  <!-- ========== PRÉ-REQUISITOS ========== -->
+  <h2 id="pre">Pré-requisitos</h2>
+
+  <table>
+    <thead><tr><th>O quê</th><th>Onde verificar</th></tr></thead>
+    <tbody>
+      <tr><td>Windows com privilégio de Administrador</td><td>Você precisa conseguir clicar em "Executar como administrador"</td></tr>
+      <tr><td>ERP GR7 instalado e o <code>config.ini</code> está válido</td><td>Pasta tipo <code>D:\GR7\GR7\config.ini</code></td></tr>
+      <tr><td>MySQL rodando na porta 3306</td><td>O ERP precisa estar abrindo normalmente</td></tr>
+      <tr><td>Domínio cadastrado na Cloudflare (DNS apontado)</td><td><a href="https://dash.cloudflare.com">dash.cloudflare.com</a> → o domínio aparece na lista</td></tr>
+      <tr><td>Acesso à internet no servidor</td><td>Só pro tunnel — a API em si é local</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box info">
+    <div class="label">Importante</div>
+    <p>Se o cliente não tem domínio na Cloudflare ainda, providencie antes. É grátis se já existe domínio em outro registrador — basta trocar os nameservers para os da Cloudflare (o painel da Cloudflare te orienta).</p>
+  </div>
+
+  <!-- ========== PASSO 1: EXTRACT ========== -->
+  <h2 id="extract">Passo a passo</h2>
+
+  <div class="step">
+    <div class="num">01</div>
+    <div class="body">
+      <h3>Extrair o pacote</h3>
+      <p>Você recebeu o arquivo <code>pacote-BuscaPreco.zip</code>. Extraia ele dentro da pasta do ERP — assim os dois ficam vizinhos.</p>
+
+      <p>Exemplo de estrutura final:</p>
+<pre>D:\GR7\GR7\
+├── config.ini             <span class="cmt">← já existe (do ERP)</span>
+├── BuscaPreco\            <span class="cmt">← extraído do ZIP</span>
+│   ├── BuscaPrecoAPI\
+│   ├── cloudflared.exe
+│   ├── nssm.exe
+│   ├── tunnel\
+│   ├── instalar.bat
+│   ├── desinstalar.bat
+│   └── LEIA-ME.txt
+└── ... (resto do ERP)</pre>
+
+      <div class="box info">
+        <div class="label">Por que aqui?</div>
+        <p>A API lê automaticamente o <code>config.ini</code> que o ERP mantém. Colocando o pacote na pasta vizinha, ela acha as configurações de banco sozinha. <strong>Não copie o config.ini</strong> — deixe-o onde está.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PASSO 2: TUNNEL ========== -->
+  <div class="step">
+    <div class="num">02</div>
+    <div class="body">
+      <h3>Configurar o Cloudflare Tunnel</h3>
+      <p>Esta etapa autentica o servidor do cliente na Cloudflare e cria a "ponte" pública que o Vercel vai usar. <strong>Só precisa fazer uma vez por cliente.</strong></p>
+
+      <p><strong>Abra o PowerShell como Administrador</strong> (botão direito no ícone do PowerShell → "Executar como administrador") e navegue até a pasta do pacote:</p>
+<pre><span class="prompt">PS&gt;</span> cd <span class="var">D:\GR7\GR7\BuscaPreco</span></pre>
+
+      <h4 style="margin-top:24px;">2.1 — Autenticar com a conta Cloudflare</h4>
+<pre><span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel login</pre>
+      <p>Vai abrir o navegador. Faça login na Cloudflare, selecione o domínio do cliente e clique em <em>Authorize</em>. Quando voltar pro terminal, a mensagem deve ser <code>You have successfully logged in.</code>.</p>
+
+      <h4 style="margin-top:24px;">2.2 — Criar o túnel</h4>
+<pre><span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel create busca-preco-<span class="var">&lt;nome-cliente&gt;</span></pre>
+      <p>Troque <code>&lt;nome-cliente&gt;</code> por uma identificação curta (ex: <code>busca-preco-mercado-x</code>). O comando imprime:</p>
+<pre>Created tunnel busca-preco-mercado-x with id <span class="var">abc12345-de67-89ab-cdef-1234567890ab</span></pre>
+      <p>Anote esse <strong>tunnel-id</strong> (UUID). Você vai precisar dele já já. O comando também criou um arquivo de credenciais em:</p>
+<pre>C:\Users\<span class="var">&lt;seu-usuario&gt;</span>\.cloudflared\<span class="var">&lt;tunnel-id&gt;</span>.json</pre>
+
+      <h4 style="margin-top:24px;">2.3 — Preencher o config.yml</h4>
+      <p>Dentro da pasta do pacote, abra <code>tunnel\config.yml.exemplo</code> em um editor (Bloco de Notas serve). Você verá <strong>três</strong> placeholders pra trocar:</p>
+<pre><span class="kw">tunnel:</span> <span class="var">&lt;TUNNEL-ID&gt;</span>
+<span class="kw">credentials-file:</span> <span class="var">&lt;CAMINHO-DO-JSON&gt;</span>
+
+<span class="kw">ingress:</span>
+  - <span class="kw">hostname:</span> <span class="var">&lt;SUBDOMINIO-DO-CLIENTE&gt;</span>
+    <span class="kw">service:</span> http://localhost:8000
+  - <span class="kw">service:</span> http_status:404</pre>
+
+      <p>Exemplo preenchido (não copie literal — use os <em>seus</em> valores):</p>
+<pre><span class="kw">tunnel:</span> abc12345-de67-89ab-cdef-1234567890ab
+<span class="kw">credentials-file:</span> C:\Users\administrador\.cloudflared\abc12345-de67-89ab-cdef-1234567890ab.json
+
+<span class="kw">ingress:</span>
+  - <span class="kw">hostname:</span> api.mercado-x.com.br
+    <span class="kw">service:</span> http://localhost:8000
+  - <span class="kw">service:</span> http_status:404</pre>
+
+      <p>Depois, <strong>renomeie o arquivo</strong> de <code>config.yml.exemplo</code> para <code>config.yml</code> (remove o <code>.exemplo</code>). No PowerShell:</p>
+<pre><span class="prompt">PS&gt;</span> Move-Item .\tunnel\config.yml.exemplo .\tunnel\config.yml</pre>
+
+      <h4 style="margin-top:24px;">2.4 — Apontar o DNS</h4>
+<pre><span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel route dns busca-preco-<span class="var">&lt;nome-cliente&gt;</span> <span class="var">api.&lt;empresa&gt;.com.br</span></pre>
+      <p>Use o mesmo nome do túnel do passo 2.2 e o mesmo subdomínio que você colocou no <code>hostname</code>. Isso cria automaticamente um registro <code>CNAME</code> na zona DNS da Cloudflare.</p>
+
+      <div class="box ok">
+        <div class="label">Pronto</div>
+        <p>O túnel está configurado. Próximo passo é registrar os serviços do Windows.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PASSO 3: INSTALL ========== -->
+  <div class="step">
+    <div class="num">03</div>
+    <div class="body">
+      <h3>Rodar o instalador</h3>
+      <p>Ainda na pasta do pacote, no PowerShell admin (ou clicando direito → "Executar como administrador"):</p>
+<pre><span class="prompt">PS&gt;</span> .\instalar.bat</pre>
+
+      <p>O script vai:</p>
+      <ul>
+        <li>Registrar o serviço <code>BuscaPrecoAPI</code> (a API empacotada)</li>
+        <li>Registrar o serviço <code>BuscaPrecoTunnel</code> (a ponte Cloudflare)</li>
+        <li>Configurar os 2 pra subir automaticamente no boot do Windows</li>
+        <li>Iniciar os 2 agora</li>
+      </ul>
+
+      <p>Saída esperada:</p>
+<pre>============================================================
+  Instalador BuscaPreco
+============================================================
+
+ [1/2] Registrando servico BuscaPrecoAPI...
+      OK
+ [2/2] Registrando servico BuscaPrecoTunnel...
+      OK
+
+ Iniciando servicos...
+
+============================================================
+  Instalacao concluida
+============================================================</pre>
+
+      <div class="box warn">
+        <div class="label">Se aparecer este aviso</div>
+        <p><code>Servico BuscaPrecoTunnel NAO instalado. Motivo: tunnel\config.yml nao encontrado.</code> — é porque você esqueceu de renomear o arquivo no passo 2.3 (tirar o <code>.exemplo</code>). Renomeie e rode <code>instalar.bat</code> de novo.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PASSO 4: VERIFY ========== -->
+  <div class="step">
+    <div class="num">04</div>
+    <div class="body">
+      <h3>Verificar se está funcionando</h3>
+
+      <p><strong>(a) Os 2 serviços estão rodando?</strong></p>
+<pre><span class="prompt">PS&gt;</span> sc query BuscaPrecoAPI
+<span class="prompt">PS&gt;</span> sc query BuscaPrecoTunnel</pre>
+      <p>Ambos devem mostrar <code>STATE : 4 RUNNING</code>.</p>
+
+      <p style="margin-top:18px;"><strong>(b) A API responde localmente?</strong></p>
+<pre><span class="prompt">PS&gt;</span> curl http://localhost:8000/docs</pre>
+      <p>Deve retornar HTML (página do Swagger). Status 200.</p>
+
+      <p style="margin-top:18px;"><strong>(c) A API responde via tunnel HTTPS?</strong> Abre no navegador (de qualquer dispositivo, pode ser celular no 4G):</p>
+<pre>https://api.<span class="var">&lt;empresa&gt;</span>.com.br/docs</pre>
+      <p>Deve abrir a mesma página Swagger. Se aparecer, está tudo conectado.</p>
+
+      <p style="margin-top:18px;"><strong>(d) Uma busca de verdade.</strong> Use o endereço acima trocando <code>/docs</code> pelo endpoint:</p>
+<pre>https://api.<span class="var">&lt;empresa&gt;</span>.com.br/produtos/barras/<span class="var">&lt;codigo&gt;</span></pre>
+      <p>Substitua <code>&lt;codigo&gt;</code> por um código de barras real do banco do cliente. Deve retornar JSON com os dados do produto.</p>
+
+      <div class="box ok">
+        <div class="label">Tudo verde?</div>
+        <p>Avance pro passo 5. Se algum dos 4 testes acima falhou, vá direto pra seção <a href="#troubleshoot">Solução de problemas</a>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PASSO 5: VERCEL ========== -->
+  <div class="step">
+    <div class="num">05</div>
+    <div class="body">
+      <h3>Atualizar a variável de ambiente no Vercel</h3>
+      <p>O site precisa saber onde a API está. Acesse <a href="https://vercel.com">vercel.com</a> e vá até o projeto <code>busca-preco-plum</code>:</p>
+      <ol>
+        <li>Menu <strong>Settings</strong> → <strong>Environment Variables</strong>.</li>
+        <li>Se já existir <code>VITE_API_URL</code>, clique nele e edite. Se não, crie:
+          <ul>
+            <li><strong>Key:</strong> <code>VITE_API_URL</code></li>
+            <li><strong>Value:</strong> <code>https://api.&lt;empresa&gt;.com.br</code> (o subdomínio do passo 2.3)</li>
+            <li><strong>Environments:</strong> marque <em>Production</em>, <em>Preview</em> e <em>Development</em>.</li>
+          </ul>
+        </li>
+        <li>Clique em <strong>Save</strong>.</li>
+        <li>Vá em <strong>Deployments</strong>, último deploy → menu <code>⋯</code> → <strong>Redeploy</strong>.
+          <ul><li>Desmarque a opção "Use existing Build Cache" — força o site a pegar o novo endereço.</li></ul>
+        </li>
+        <li>Aguarde uns 30 segundos a 1 minuto. Quando o status ficar <em>Ready</em>, abre <code>https://busca-preco-plum.vercel.app</code> e testa uma busca.</li>
+      </ol>
+
+      <div class="box ok">
+        <div class="label">Implantação completa</div>
+        <p>O cliente já pode consultar preços de qualquer lugar. O servidor reinicia → os serviços sobem sozinhos → continua funcionando.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TROUBLESHOOTING ========== -->
+  <h2 id="troubleshoot">Solução de problemas</h2>
+
+  <h3>O serviço BuscaPrecoAPI não inicia</h3>
+  <p>Veja o log:</p>
+<pre><span class="prompt">PS&gt;</span> Get-Content .\logs\api.log -Tail 50</pre>
+  <p>Causas mais comuns:</p>
+  <ul>
+    <li><strong>MySQL não está rodando</strong> — o ERP está aberto? Se não, suba o MySQL primeiro.</li>
+    <li><strong>Credenciais erradas no <code>config.ini</code></strong> — confira <code>Servidor</code>, <code>Base_Dados</code>, <code>Caminho_Servidor</code>, <code>MySQL_Porta</code> na seção <code>[Configuracoes]</code>.</li>
+    <li><strong>Porta 8000 já está ocupada</strong> — <code>netstat -ano | findstr 8000</code> e mate o processo.</li>
+  </ul>
+
+  <h3>O serviço BuscaPrecoTunnel não conecta</h3>
+<pre><span class="prompt">PS&gt;</span> Get-Content .\logs\tunnel.log -Tail 50</pre>
+  <ul>
+    <li>O caminho em <code>credentials-file</code> dentro do <code>config.yml</code> precisa ser o <strong>caminho absoluto correto</strong> do arquivo <code>.json</code>. Se o usuário Windows for diferente, o caminho está errado.</li>
+    <li>O subdomínio precisa estar apontado via <code>tunnel route dns</code>. Verifique com:
+<pre><span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel info busca-preco-<span class="var">&lt;nome-cliente&gt;</span></pre>
+    </li>
+  </ul>
+
+  <h3>Erro "Failed to load Python DLL" ao tentar o exe</h3>
+  <p>A pasta <code>BuscaPrecoAPI\_internal\</code> está incompleta. Apague a pasta do BuscaPrecoAPI inteira e recopie de dentro do ZIP original. Pode ter sido bloqueada pelo Windows Defender — adicione a pasta como exceção no antivírus se persistir.</p>
+
+  <h3>O site mostra "Produto não encontrado" pra códigos que existem</h3>
+  <ol>
+    <li>Abra o DevTools do navegador (F12) → aba <strong>Network</strong> → faça uma busca → clica na requisição falha.</li>
+    <li>Se for erro de CORS, confira que a URL do Vercel está na lista de origens permitidas no <code>srv-buscapreco.py</code> (caso seja URL nova).</li>
+    <li>Se for erro 502/504, o tunnel está caído — confira o serviço.</li>
+    <li>Se a resposta vier <code>{"exatos":[],"similares":[]}</code> com status 200, a API funcionou mas o código não existe no banco do cliente.</li>
+  </ol>
+
+  <h3>Logs ficam grandes demais</h3>
+  <p>O NSSM já rotaciona em 10MB. Se quiser limpar:</p>
+<pre><span class="prompt">PS&gt;</span> Remove-Item .\logs\*.log</pre>
+
+  <!-- ========== OPERAÇÃO ========== -->
+  <h2 id="manage">Operação do dia a dia</h2>
+
+  <h3>Reiniciar um serviço manualmente</h3>
+<pre><span class="prompt">PS&gt;</span> sc stop  BuscaPrecoAPI
+<span class="prompt">PS&gt;</span> sc start BuscaPrecoAPI</pre>
+
+  <h3>Atualizar a versão da API</h3>
+  <ol>
+    <li>Pare os serviços: <code>sc stop BuscaPrecoAPI</code>.</li>
+    <li>Substitua a pasta <code>BuscaPrecoAPI\</code> pelo novo conteúdo do ZIP. <strong>Não mexa</strong> em <code>cloudflared.exe</code>, <code>nssm.exe</code>, <code>tunnel\config.yml</code> nem <code>config.ini</code>.</li>
+    <li>Suba os serviços: <code>sc start BuscaPrecoAPI</code>.</li>
+  </ol>
+
+  <h3>Desinstalar tudo</h3>
+<pre><span class="prompt">PS&gt;</span> .\desinstalar.bat</pre>
+  <p>Para e remove os 2 serviços. Os arquivos da pasta ficam — apague manualmente se quiser.</p>
+
+  <footer class="cap">
+    <span>Busca · Preço</span>
+    <span>Nymbus Lab © 2026</span>
+  </footer>
+
+</div>
+</body>
+</html>

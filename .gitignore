@@ -43,3 +43,16 @@ __pycache__/
 config.ini
 api/config.ini
 
+# Build artifacts PyInstaller
+build/
+dist/
+*.spec
+
+# Pacote binarios — sao baixados/recompilados via preparar-pacote.ps1
+pacote/BuscaPrecoAPI/
+pacote/cloudflared.exe
+pacote/nssm.exe
+pacote/logs/
+pacote/tunnel/config.yml
+pacote-BuscaPreco.zip
+
