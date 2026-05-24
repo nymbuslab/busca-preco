@@ -14,8 +14,10 @@
 #  cod_barras (a tabela mensal tem custo + data + cod_barras).
 # ============================================================
 
+import configparser
 from contextlib import asynccontextmanager
 from datetime import date
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import aiomysql
@@ -28,7 +30,9 @@ from pydantic_settings import BaseSettings
 
 
 # ------------------------------------------------------------
-# Settings
+# Settings — defaults aplicados quando config.ini nao existe.
+# Usuario e senha do MySQL nao estao no config.ini do GR7,
+# por isso ficam aqui (podem ser sobrescritos via .env).
 # ------------------------------------------------------------
 class Settings(BaseSettings):
     mysql_host: str = "localhost"
@@ -41,7 +45,53 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
-settings = Settings()
+def carregar_config_ini() -> Dict[str, object]:
+    """
+    Le config.ini ao lado de serve.py e devolve overrides para Settings.
+    Retorna dict vazio se o arquivo nao existir (modo DEV).
+
+    Convencao do GR7 na secao [Configuracoes]:
+      Servidor=1            -> esta maquina E o servidor, MySQL em localhost
+      Servidor=0            -> esta maquina e cliente, MySQL em Caminho_Servidor
+      Base_Dados=<nome>     -> nome do schema MySQL
+      MySQL_Porta=<int>     -> porta MySQL
+    """
+    ini_path = Path(__file__).parent / "config.ini"
+    if not ini_path.exists():
+        return {}
+
+    parser = configparser.ConfigParser(
+        strict=False,  # arquivo do GR7 repete [Configuracoes] no final
+        comment_prefixes=("--", ";", "#"),
+        inline_comment_prefixes=("--", ";", "#"),
+    )
+    # Sistema GR7 e legado brasileiro, INI em latin-1.
+    parser.read(ini_path, encoding="latin-1")
+
+    if not parser.has_section("Configuracoes"):
+        return {}
+    cfg = parser["Configuracoes"]
+    overrides: Dict[str, object] = {}
+
+    servidor = cfg.get("Servidor", "").strip()
+    caminho = cfg.get("Caminho_Servidor", "").strip()
+    if servidor == "1":
+        overrides["mysql_host"] = "localhost"
+    elif servidor == "0" and caminho:
+        overrides["mysql_host"] = caminho
+
+    porta = cfg.get("MySQL_Porta", "").strip()
+    if porta.isdigit():
+        overrides["mysql_port"] = int(porta)
+
+    base = cfg.get("Base_Dados", "").strip()
+    if base:
+        overrides["mysql_database"] = base
+
+    return overrides
+
+
+settings = Settings(**carregar_config_ini())
 
 
 # ------------------------------------------------------------
@@ -307,6 +357,10 @@ PORT = 8000
 
 def main():
     print(f"[OK] Busca Preco API rodando em http://{HOST}:{PORT}")
+    print(
+        f"[OK] MySQL: {settings.mysql_user}@{settings.mysql_host}:"
+        f"{settings.mysql_port}/{settings.mysql_database}"
+    )
     uvicorn.run(app, host=HOST, port=PORT, log_level="info")
 
 

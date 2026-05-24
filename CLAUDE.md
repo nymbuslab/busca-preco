@@ -81,13 +81,26 @@ Heurística do frontend (`Index.tsx`): se o input casa `/^\d+$/`, chama `/barras
 
 - `VITE_API_URL` — base da API. Default no código: `http://localhost:8000`.
 
-**Backend (`.env` lido pelo `pydantic-settings` em `api/serve.py`, com defaults no código):**
+**Backend — hierarquia de configuração (do mais forte para o mais fraco):**
 
-- `MYSQL_HOST` — default `localhost`
-- `MYSQL_PORT` — default `3306`
-- `MYSQL_USER` — default `automacao`
-- `MYSQL_PASSWORD` — default `rm123`
-- `MYSQL_DATABASE` — default `automacao`
+1. **`config.ini` na mesma pasta de `serve.py`** (produção no cliente — formato do GR7).
+2. `.env` na pasta atual de execução (override de dev).
+3. Defaults no código de [api/serve.py](api/serve.py).
+
+**`config.ini` (formato GR7, seção `[Configuracoes]`):**
+
+- `Servidor=1` → esta máquina **é** o servidor → `mysql_host = "localhost"`
+- `Servidor=0` → esta máquina é cliente → `mysql_host = Caminho_Servidor` (pega o valor literal, pode ser hostname/IP/NetBIOS)
+- `Base_Dados=<nome>` → `mysql_database`
+- `MySQL_Porta=<n>` → `mysql_port`
+
+Parser tolerante: aceita `[Configuracoes]` repetido (arquivo do GR7 tem 2 vezes), trata `--`/`;`/`#` como comentários, lê em `latin-1`.
+
+**`.env` (apenas dev):**
+
+- `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`
+
+**`mysql_user` e `mysql_password` não estão no `config.ini` do GR7** — ficam hardcoded em [serve.py](api/serve.py) (`automacao`/`rm123`) e podem ser sobrescritos via `.env`.
 
 `HOST` e `PORT` do uvicorn são constantes no topo do `serve.py` (`0.0.0.0:8000`). CORS é hardcoded (`localhost:3000/5173/8080`) — quando o site estiver no Vercel, **adicionar a URL pública à lista `allow_origins` direto no arquivo**.
 
@@ -118,16 +131,31 @@ python api/serve.py                         # producao (uvicorn 0.0.0.0:8000)
 uvicorn api.serve:app --reload --port 8000
 ```
 
-## Rodar como servico Windows (NSSM)
+## Deploy no servidor do cliente
 
-Em PowerShell elevado, dentro da pasta do projeto:
+Em produção, copiar **apenas o `serve.py`** (e o `.venv` ou um Python global com as deps) para dentro da pasta GR7 do cliente — ex: `D:\GR7\GR7\serve.py`. O `config.ini` que o ERP já mantém na mesma pasta é lido automaticamente, então **nenhum ajuste manual de host/porta/banco é necessário**, independente da letra do drive.
+
+Estrutura esperada no cliente:
+
+```text
+<DRIVE>\<...>\GR7\GR7\
+├── config.ini       ← já existe (mantido pelo ERP)
+├── serve.py         ← copiar daqui
+└── .venv\           ← ou Python global com requirements.txt
+```
+
+### Rodar como serviço Windows (NSSM)
+
+Em PowerShell elevado, dentro da pasta GR7 do cliente:
 
 ```powershell
-# Instalar (apontar para o python do .venv)
-nssm install BuscaPrecoAPI "C:\pasta_segura\projetos\busca-preco\.venv\Scripts\python.exe" "C:\pasta_segura\projetos\busca-preco\api\serve.py"
-nssm set BuscaPrecoAPI AppDirectory "C:\pasta_segura\projetos\busca-preco"
-nssm set BuscaPrecoAPI AppStdout "C:\pasta_segura\projetos\busca-preco\api\serve.log"
-nssm set BuscaPrecoAPI AppStderr "C:\pasta_segura\projetos\busca-preco\api\serve.log"
+# Ajustar os 2 caminhos absolutos abaixo conforme a maquina
+$ROOT = "D:\GR7\GR7"
+
+nssm install BuscaPrecoAPI "$ROOT\.venv\Scripts\python.exe" "$ROOT\serve.py"
+nssm set BuscaPrecoAPI AppDirectory "$ROOT"
+nssm set BuscaPrecoAPI AppStdout "$ROOT\serve.log"
+nssm set BuscaPrecoAPI AppStderr "$ROOT\serve.log"
 nssm start BuscaPrecoAPI
 
 # Conferir / parar / remover
@@ -136,12 +164,12 @@ nssm stop   BuscaPrecoAPI
 nssm remove BuscaPrecoAPI confirm
 ```
 
-O `.env` precisa estar na raiz do projeto (mesma pasta que vira `AppDirectory`).
+O `serve.log` registra no startup a config MySQL resolvida (host/porta/db, **sem senha**) — útil pra diagnosticar quando o `config.ini` mudar.
 
 ## Regras de Desenvolvimento específicas do projeto
 
 1. **Não quebrar o contrato de resposta `{ exatos, similares }`** — o frontend depende dessa forma em ambos os endpoints.
-2. **Heurística barcode-vs-descrição** está no cliente (`/^\d+$/`). Se mudar a regra, ajustar em `Index.tsx` e considerar fazer no backend para evitar divergência.
+2. **Front busca **só** por código de barras** (`/produtos/barras/...`). O endpoint `/produtos/descricao/...` continua disponível na API como reserva (Swagger / debug / possível retomada futura) mas **não é chamado pelo frontend**. Input numérico forçado em [SearchBar.tsx](src/components/SearchBar.tsx) (`replace(/\D/g, "")` + `inputMode="numeric"`).
 3. **Mantenha SQL parametrizado.** Os endpoints aceitam input arbitrário direto na URL — sem placeholder vira SQL injection imediato. A **única** parte da query montada por interpolação é o nome da tabela `itens_compra_MMYY`, calculado pelo servidor (nunca vem do usuário).
 4. **Não trocar o join por `cod_produto`** nas tabelas de histórico. O join correto é por `cod_barras`.
 5. **Nomes de campos no JSON são contrato com o frontend** — `valor_custo_15dias`/`valor_custo_30dias`/`data_custo_*` continuam mesmo quando conceitualmente são "mês anterior" / "2 meses atrás". Renomear quebra `Index.tsx` e `ProductCard.tsx`.

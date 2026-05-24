@@ -16,6 +16,11 @@ _(nada no momento)_
 
 ## ✅ Concluído
 
+- [x] 2026-05-23 — `serve.py` lê `config.ini` do GR7 ao lado do próprio arquivo (qualquer letra de drive). Convenção: `Servidor=1`→localhost, `Servidor=0`→`Caminho_Servidor`. Lê também `Base_Dados` e `MySQL_Porta`. Sem `config.ini` usa defaults do código (modo DEV). Log de startup imprime config resolvida sem senha. `config.ini` adicionado ao `.gitignore`.
+
+- [x] 2026-05-23 — UX: front passa a buscar **só por código de barras** (digitado ou via scanner). Heurística `isBarcode` removida de `Index.tsx`. Input força só dígitos (`inputMode="numeric"` + filtro `\D`). Textos atualizados. Endpoint `/produtos/descricao/...` permanece na API como reserva.
+- [x] 2026-05-23 — Bug fix: loop infinito de re-render no `SearchBar` quando o usuário digitava. Causa: `handleSearch`/`handleClear` em `Index.tsx` recriadas a cada render → `useEffect` do `SearchBar` (que tem `onSearch` nas deps) re-disparava → setState → loop até o navegador travar com `ERR_INSUFFICIENT_RESOURCES`. Fix: envolver as duas funções em `useCallback(..., [])`.
+
 - [x] 2026-05-23 — Estrutura inicial de contexto criada: `CLAUDE.md` + `PROGRESSO.md` documentando stack, endpoints, schema, env vars e pontos em aberto.
 - [x] 2026-05-23 — Backend consolidado em **arquivo único `api/serve.py`** (settings + models + pool MySQL + endpoints + entrypoint `uvicorn.run`). Removidos `main.py`, `models.py`, `config.py`, `database.py`. Instruções de NSSM para serviço Windows adicionadas ao `CLAUDE.md`.
 - [x] 2026-05-23 — Corrigido schema real da API: tabela é `produto` (singular). Colunas reais (`qtd_estoque`, `valor_compra`, `data_ultima_compra`) substituem `estoque`/`valor_custo_atual`/`data_custo_atual` no SELECT.

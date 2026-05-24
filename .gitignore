@@ -39,3 +39,7 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Config local de runtime (GR7) — especifico por maquina
+config.ini
+api/config.ini
+
