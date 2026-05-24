@@ -43,15 +43,25 @@ Aplicação web para consulta rápida de preço, estoque e histórico de custo d
 
 ## Schema do Banco
 
-Tabela `produtos` (MySQL) — colunas consultadas pela API:
+**Tabela `produto` (MySQL, singular)** — colunas usadas:
 
 - `cod_produto` (int, PK)
 - `produto` (string, descrição)
 - `cod_barras` (string, nullable)
-- `valor_venda1` (decimal)
-- `estoque` (int, nullable)
-- `valor_custo_atual`, `valor_custo_15dias`, `valor_custo_30dias` (decimal, nullable)
-- `data_custo_atual`, `data_custo_15dias`, `data_custo_30dias` (date, nullable)
+- `valor_venda1` (decimal) — preço de venda
+- `qtd_estoque` (int, nullable)
+- `valor_compra` (decimal, nullable) — **valor da última compra (= custo atual)**
+- `data_ultima_compra` (date, nullable) — data da última compra
+
+**Tabelas mensais `itens_compra_MMYY`** — histórico de custo, com **rotação mensal**:
+
+- A cada virada de mês, o ERP do cliente renomeia a tabela `itens_compra` corrente para `itens_compra_MMYY` (ex: `itens_compra_0426` = abril/2026, `itens_compra_0326` = março/2026).
+- Colunas: `cod_barras`, `custo`, `data` (+ outras não usadas aqui).
+- A API calcula o nome em runtime via `tabela_itens_compra(meses_atras)` em [api/serve.py](api/serve.py).
+- `valor_custo_15dias` ← linha de maior `data` do mês anterior (`meses_atras=1`).
+- `valor_custo_30dias` ← linha de maior `data` de 2 meses atrás (`meses_atras=2`).
+- **Join é por `cod_barras`** (não por `cod_produto`).
+- Se a tabela do mês não existir (erro MySQL 1146), os campos correspondentes retornam `null` graciosamente — não derruba a busca.
 
 Não há migrations versionadas — o schema é assumido como pré-existente no banco `automacao`.
 
@@ -131,9 +141,11 @@ O `.env` precisa estar na raiz do projeto (mesma pasta que vira `AppDirectory`).
 
 1. **Não quebrar o contrato de resposta `{ exatos, similares }`** — o frontend depende dessa forma em ambos os endpoints.
 2. **Heurística barcode-vs-descrição** está no cliente (`/^\d+$/`). Se mudar a regra, ajustar em `Index.tsx` e considerar fazer no backend para evitar divergência.
-3. **Mantenha SQL parametrizado.** Os endpoints aceitam input arbitrário direto na URL — sem placeholder vira SQL injection imediato.
-4. **Scanner zxing:** prioriza câmera traseira procurando `back`/`environment`/`traseira` no `device.label`. Em desktop sem câmera traseira, cai no primeiro device disponível.
-5. **`react-query` está configurado mas subutilizado** — antes de adicionar `useQuery`, decidir se vale migrar `Index.tsx` para usar o cache (hoje cada busca refaz fetch).
+3. **Mantenha SQL parametrizado.** Os endpoints aceitam input arbitrário direto na URL — sem placeholder vira SQL injection imediato. A **única** parte da query montada por interpolação é o nome da tabela `itens_compra_MMYY`, calculado pelo servidor (nunca vem do usuário).
+4. **Não trocar o join por `cod_produto`** nas tabelas de histórico. O join correto é por `cod_barras`.
+5. **Nomes de campos no JSON são contrato com o frontend** — `valor_custo_15dias`/`valor_custo_30dias`/`data_custo_*` continuam mesmo quando conceitualmente são "mês anterior" / "2 meses atrás". Renomear quebra `Index.tsx` e `ProductCard.tsx`.
+6. **Scanner zxing:** prioriza câmera traseira procurando `back`/`environment`/`traseira` no `device.label`. Em desktop sem câmera traseira, cai no primeiro device disponível.
+7. **`react-query` está configurado mas subutilizado** — antes de adicionar `useQuery`, decidir se vale migrar `Index.tsx` para usar o cache (hoje cada busca refaz fetch).
 
 ## Bibliotecas para consulta no Context7
 
