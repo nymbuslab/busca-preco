@@ -8,6 +8,12 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+
+# Locks alternativos — projeto padroniza em package-lock.json (npm)
+bun.lockb
+bun.lock
+yarn.lock
+pnpm-lock.yaml
 dist
 dist-ssr
 *.local
