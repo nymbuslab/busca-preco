@@ -135,25 +135,25 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="w-full border-b border-foreground/15">
-        <div className="max-w-3xl mx-auto px-6 py-6 flex items-baseline justify-between">
-          <h1 className="text-2xl font-semibold leading-none tracking-tight">
+        <div className="max-w-3xl mx-auto px-4 md:px-6 py-3 md:py-6 flex items-baseline justify-between gap-3">
+          <h1 className="text-lg md:text-2xl font-semibold leading-none tracking-tight">
             Busca<span className="text-primary">.</span>Preço
           </h1>
-          <span className="smallcaps text-[10px] text-muted-foreground font-mono">
-            Sistema interno · v1.0
+          <span className="smallcaps text-[9px] md:text-[10px] text-muted-foreground font-mono truncate">
+            <span className="hidden sm:inline">Sistema interno · </span>v1.0
           </span>
         </div>
       </header>
 
       <main className="flex-1 w-full">
-        <div className="max-w-3xl mx-auto px-6 py-10">
-          <section className="mb-12">
+        <div className="max-w-3xl mx-auto px-4 md:px-6 py-4 md:py-10">
+          <section className="mb-5 md:mb-12">
             <SearchBar onSearch={handleSearch} onClear={handleClear} isLoading={isLoading} debounceMs={300} />
           </section>
 
           <section
             id="search-results"
-            className="space-y-10"
+            className="space-y-6 md:space-y-10"
             role="region"
             aria-label="Resultados da busca"
             aria-live="polite"
@@ -163,16 +163,16 @@ export default function Index() {
             {!isLoading && totalResults > 0 && (
               <>
                 {results.exatos.length > 0 && (
-                  <div className="space-y-4 ledger-in">
-                    <div className="flex items-baseline justify-between rule pb-2">
-                      <h2 className="smallcaps text-xs font-medium">
+                  <div className="space-y-3 md:space-y-4 ledger-in">
+                    <div className="flex items-baseline justify-between rule pb-1 md:pb-2">
+                      <h2 className="smallcaps text-[11px] md:text-xs font-medium">
                         Resultado exato
                       </h2>
                       <span className="font-mono text-[11px] text-muted-foreground">
                         {String(results.exatos.length).padStart(2, "0")} {results.exatos.length === 1 ? "item" : "itens"}
                       </span>
                     </div>
-                    <div role="list" aria-label={`${results.exatos.length} resultados exatos`} className="space-y-8">
+                    <div role="list" aria-label={`${results.exatos.length} resultados exatos`} className="space-y-5 md:space-y-8">
                       {results.exatos.map((product) => (
                         <ProductCard
                           key={`exact-${product.codigo}`}
@@ -185,16 +185,16 @@ export default function Index() {
                 )}
 
                 {results.similares.length > 0 && (
-                  <div className="space-y-4 ledger-in">
-                    <div className="flex items-baseline justify-between rule pb-2">
-                      <h2 className="smallcaps text-xs font-medium">
+                  <div className="space-y-3 md:space-y-4 ledger-in">
+                    <div className="flex items-baseline justify-between rule pb-1 md:pb-2">
+                      <h2 className="smallcaps text-[11px] md:text-xs font-medium">
                         Similares <span className="text-muted-foreground/70 font-normal normal-case tracking-normal">— mesmo prefixo</span>
                       </h2>
                       <span className="font-mono text-[11px] text-muted-foreground">
                         {String(results.similares.length).padStart(2, "0")} {results.similares.length === 1 ? "item" : "itens"}
                       </span>
                     </div>
-                    <div role="list" aria-label={`${results.similares.length} resultados similares`} className="space-y-8">
+                    <div role="list" aria-label={`${results.similares.length} resultados similares`} className="space-y-5 md:space-y-8">
                       {results.similares.map((product) => (
                         <ProductCard
                           key={`similar-${product.codigo}`}
@@ -209,27 +209,27 @@ export default function Index() {
             )}
 
             {!isLoading && totalResults === 0 && hasSearched && (
-              <div className="py-20 text-center space-y-2 border-y border-foreground/15">
+              <div className="py-12 md:py-20 text-center space-y-2 border-y border-foreground/15">
                 <p className="smallcaps text-xs text-muted-foreground font-mono">
                   ∅ Sem resultado
                 </p>
-                <p className="text-xl font-medium">Código não cadastrado.</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-lg md:text-xl font-medium">Código não cadastrado.</p>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Confira os números ou escaneie novamente.
                 </p>
               </div>
             )}
 
             {!hasSearched && (
-              <div className="py-20 text-center space-y-3">
-                <p className="smallcaps text-xs text-muted-foreground font-mono">
+              <div className="py-10 md:py-20 text-center space-y-2 md:space-y-3">
+                <p className="smallcaps text-[11px] md:text-xs text-muted-foreground font-mono">
                   Aguardando leitura
                 </p>
-                <p className="text-2xl font-medium leading-tight tracking-tight">
+                <p className="text-xl md:text-2xl font-medium leading-tight tracking-tight">
                   Digite ou escaneie<br />
                   o <span className="text-primary">código de barras</span>.
                 </p>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                <p className="text-xs md:text-sm text-muted-foreground max-w-sm mx-auto px-2">
                   Use o leitor da câmera, um scanner USB ou digite manualmente os números.
                 </p>
               </div>
@@ -239,7 +239,7 @@ export default function Index() {
       </main>
 
       <footer className="w-full border-t border-foreground/15">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+        <div className="max-w-3xl mx-auto px-4 md:px-6 py-2.5 md:py-4 flex items-center justify-between text-[10px] md:text-[11px] font-mono text-muted-foreground">
           <span className="smallcaps">Nymbus Lab</span>
           <span>© {new Date().getFullYear()}</span>
         </div>

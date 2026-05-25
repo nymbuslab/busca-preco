@@ -70,7 +70,7 @@ export function SearchBar({ onSearch, onClear, isLoading = false, debounceMs = 3
           </span>
         </div>
 
-        <div className="flex items-center gap-3 py-3 border-b border-foreground/15">
+        <div className="flex items-center gap-2 md:gap-3 py-2 md:py-3 border-b border-foreground/15">
           <input
             id="product-search"
             type="text"
@@ -82,7 +82,7 @@ export function SearchBar({ onSearch, onClear, isLoading = false, debounceMs = 3
             onChange={handleInputChange}
             aria-label="Digite o código de barras do produto"
             aria-controls="search-results"
-            className="flex-1 bg-transparent font-mono text-2xl md:text-3xl tracking-[0.08em] placeholder:text-muted-foreground/40 focus:outline-none"
+            className="flex-1 min-w-0 bg-transparent font-mono text-xl md:text-3xl tracking-[0.06em] md:tracking-[0.08em] placeholder:text-muted-foreground/40 focus:outline-none"
           />
 
           {query.length > 0 && (
@@ -91,7 +91,7 @@ export function SearchBar({ onSearch, onClear, isLoading = false, debounceMs = 3
               onClick={handleClear}
               title="Limpar busca"
               aria-label="Limpar campo de busca"
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="p-1.5 md:p-2 text-muted-foreground hover:text-foreground transition-colors shrink-0"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -102,14 +102,14 @@ export function SearchBar({ onSearch, onClear, isLoading = false, debounceMs = 3
             onClick={() => setIsScannerOpen(true)}
             title="Escanear código de barras"
             aria-label="Abrir scanner de código de barras"
-            className="p-2 text-foreground/70 hover:text-primary transition-colors"
+            className="p-1.5 md:p-2 text-foreground/70 hover:text-primary transition-colors shrink-0"
           >
             <Camera className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <p className="font-mono text-[10px] text-muted-foreground">
+        <div className="mt-3 md:mt-4 flex items-center justify-between gap-3">
+          <p className="hidden sm:block font-mono text-[10px] text-muted-foreground">
             <span className="smallcaps">Enter</span> para consultar
           </p>
 
@@ -120,7 +120,8 @@ export function SearchBar({ onSearch, onClear, isLoading = false, debounceMs = 3
             className="
               inline-flex items-center gap-2
               bg-foreground text-background
-              px-5 py-2.5
+              w-full sm:w-auto justify-center
+              px-5 py-2 md:py-2.5
               smallcaps text-xs font-medium
               transition-all
               hover:bg-primary hover:text-primary-foreground

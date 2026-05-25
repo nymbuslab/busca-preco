@@ -68,19 +68,19 @@ function CostRow({ label, hint, date, price, accent }: CostRowProps) {
     : "text-foreground";
 
   return (
-    <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 py-2.5">
+    <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 py-1.5 md:py-2.5">
       <div>
         <p className="smallcaps text-[10px] text-foreground/80 font-medium">
           {label}
         </p>
         {hint && (
-          <p className="font-mono text-[10px] text-muted-foreground/80 mt-0.5">
+          <p className="font-mono text-[9px] md:text-[10px] text-muted-foreground/80 mt-0.5">
             {hint}
           </p>
         )}
       </div>
       <div className="text-right">
-        <p className={`font-mono text-base tabular-nums tracking-tight ${priceClass}`}>
+        <p className={`font-mono text-sm md:text-base tabular-nums tracking-tight ${priceClass}`}>
           {formatCurrency(price)}
         </p>
         <p className="font-mono text-[10px] text-muted-foreground tabular-nums mt-0.5">
@@ -107,12 +107,12 @@ export function ProductCard({ product, variant = "exact" }: ProductCardProps) {
   return (
     <article
       className={
-        "ledger-in border-y border-foreground/20 py-6 " +
+        "ledger-in border-y border-foreground/20 py-4 md:py-6 " +
         (variant === "similar" ? "opacity-90" : "")
       }
     >
       {/* CABECALHO: codigo + tag */}
-      <header className="flex items-baseline justify-between mb-3">
+      <header className="flex items-baseline justify-between mb-2 md:mb-3">
         <p className="font-mono text-[11px] text-muted-foreground">
           <span className="smallcaps">Cód</span>{" "}
           <span className="text-foreground">{product.codigo}</span>
@@ -128,13 +128,13 @@ export function ProductCard({ product, variant = "exact" }: ProductCardProps) {
       </header>
 
       {/* NOME DO PRODUTO */}
-      <h3 className="text-xl md:text-2xl font-semibold leading-tight tracking-tight text-foreground">
+      <h3 className="text-lg md:text-2xl font-semibold leading-tight tracking-tight text-foreground">
         {product.descricao}
       </h3>
 
       {/* CODIGO DE BARRAS */}
-      <div className="mt-3 flex items-center gap-3">
-        <p className="font-mono text-xs tracking-[0.06em] text-muted-foreground">
+      <div className="mt-1.5 md:mt-3 flex items-center gap-2 md:gap-3">
+        <p className="font-mono text-[11px] md:text-xs tracking-[0.06em] text-muted-foreground">
           <span className="smallcaps">EAN</span>{" "}
           <span className={hasBarcode ? "text-foreground" : "italic"}>
             {product.codigoBarras}
@@ -158,16 +158,16 @@ export function ProductCard({ product, variant = "exact" }: ProductCardProps) {
       </div>
 
       {/* PRECO DE VENDA + ESTOQUE */}
-      <div className="mt-6 space-y-3 pt-4 border-t border-foreground/15">
+      <div className="mt-3 md:mt-6 space-y-2 md:space-y-3 pt-3 md:pt-4 border-t border-foreground/15">
         <div className="leader">
-          <span className="smallcaps text-xs text-foreground/80">Preço de venda</span>
-          <span className="font-mono text-3xl md:text-4xl tabular-nums tracking-tight text-primary">
+          <span className="smallcaps text-[11px] md:text-xs text-foreground/80">Preço de venda</span>
+          <span className="font-mono text-2xl md:text-4xl tabular-nums tracking-tight text-primary">
             {formatCurrency(product.precoVenda)}
           </span>
         </div>
 
         <div className="leader">
-          <span className="smallcaps text-xs text-foreground/80">
+          <span className="smallcaps text-[11px] md:text-xs text-foreground/80">
             Estoque
             {PESAVEL_LABEL[product.pesavel] && (
               <span className="ml-2 text-[9px] text-muted-foreground font-normal normal-case tracking-normal">
@@ -175,7 +175,7 @@ export function ProductCard({ product, variant = "exact" }: ProductCardProps) {
               </span>
             )}
           </span>
-          <span className="font-mono text-base tabular-nums">
+          <span className="font-mono text-sm md:text-base tabular-nums">
             {formatEstoque(product.estoque)}{" "}
             <span className="text-muted-foreground text-xs">{product.unidade}</span>
           </span>
@@ -183,8 +183,8 @@ export function ProductCard({ product, variant = "exact" }: ProductCardProps) {
       </div>
 
       {/* HISTORICO DE CUSTO */}
-      <div className="mt-6 pt-4 border-t border-foreground/15">
-        <p className="smallcaps text-[10px] font-mono text-muted-foreground mb-1">
+      <div className="mt-3 md:mt-6 pt-3 md:pt-4 border-t border-foreground/15">
+        <p className="smallcaps text-[10px] font-mono text-muted-foreground mb-0.5 md:mb-1">
           Histórico de custo
         </p>
 
