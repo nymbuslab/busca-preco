@@ -415,12 +415,28 @@
 <span class="kw">credentials-file:</span> C:\Users\administrador\.cloudflared\abc12345-de67-89ab-cdef-1234567890ab.json
 
 <span class="kw">ingress:</span>
-  - <span class="kw">hostname:</span> api.mercado-x.com.br
+  - <span class="kw">hostname:</span> api.buscapreco.com
     <span class="kw">service:</span> http://localhost:8000
   - <span class="kw">service:</span> http_status:404</pre>
 
       <p>Depois, <strong>renomeie o arquivo</strong> de <code>config.yml.exemplo</code> para <code>config.yml</code> (remove o <code>.exemplo</code>). No PowerShell:</p>
 <pre><span class="prompt">PS&gt;</span> Move-Item .\tunnel\config.yml.exemplo .\tunnel\config.yml</pre>
+
+      <div class="box info">
+        <div class="label">Atalho via PowerShell (alternativa ao editor)</div>
+        <p>Se preferir, crie o arquivo direto com este comando (substitua os 2 valores marcados):</p>
+<pre><span class="prompt">PS&gt;</span> $config = @'
+<span class="kw">tunnel:</span> <span class="var">SEU-TUNNEL-ID-AQUI</span>
+<span class="kw">credentials-file:</span> <span class="var">C:\Users\&lt;seu-usuario&gt;\.cloudflared\SEU-TUNNEL-ID-AQUI.json</span>
+
+<span class="kw">ingress:</span>
+  - <span class="kw">hostname:</span> api.buscapreco.com
+    <span class="kw">service:</span> http://localhost:8000
+  - <span class="kw">service:</span> http_status:404
+'@
+<span class="prompt">PS&gt;</span> Set-Content -Path .\tunnel\config.yml -Value $config -Encoding UTF8</pre>
+        <p><strong>Importante:</strong> salva em <code>.\tunnel\config.yml</code> (dentro da pasta do pacote) — esse é o local que o <code>instalar.bat</code> procura primeiro. Como fallback ele também aceita <code>%USERPROFILE%\.cloudflared\config.yml</code>, mas o pacote é a recomendação.</p>
+      </div>
 
       <h4 style="margin-top:24px;">2.4 — Apontar o DNS</h4>
 <pre><span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel route dns busca-preco-api <span class="var">api.buscapreco.com</span></pre>
@@ -512,15 +528,26 @@
   <div class="step">
     <div class="num">05</div>
     <div class="body">
-      <h3>Atualizar a variável de ambiente no Cloudflare Pages</h3>
-      <p>O site já está configurado com o endereço da API (<code>https://api.buscapreco.com</code>). Esta etapa só é necessária se o endereço da API mudar no futuro (ex: renomear o tunnel). Pra deixar registrado:</p>
+      <h3>Conferir a variável de ambiente no Cloudflare Pages</h3>
+      <p>O site precisa ter sido <strong>buildado</strong> com o endereço da API embutido. O repositório já vem com um <code>.env.production</code> apontando pra <code>https://api.buscapreco.com</code>, então, se nada foi mudado, está OK. Mas é importante confirmar — se a env var estiver errada ou ausente, o site tenta chamar <code>http://localhost:8000</code> e <strong>todas as buscas falham silenciosamente</strong>.</p>
+
       <ol>
         <li>Cloudflare → <strong>Workers e Pages</strong> → projeto <code>busca-preco</code>.</li>
         <li>Aba <strong>Configurações</strong> → <strong>Variáveis de ambiente</strong>.</li>
-        <li>Verifique se existe <code>VITE_API_URL</code> com valor <code>https://api.buscapreco.com</code> nos environments <em>Production</em> e <em>Preview</em>. Se mudou, edita e salva.</li>
-        <li>Vá em <strong>Implantações</strong>, última implantação → menu <code>⋯</code> → <strong>Reimplantar</strong> (sem usar cache).</li>
-        <li>Aguarde uns 1-2 minutos. Quando o status ficar verde, abre <code>https://buscapreco.com</code> e testa uma busca.</li>
+        <li>Confirma que existe <code>VITE_API_URL</code> com valor <code>https://api.buscapreco.com</code> em <em>Produção</em>.
+          <ul>
+            <li>Se NÃO existir, adiciona como variável de ambiente em <em>Produção</em> e <em>Visualização</em>.</li>
+            <li>Se já existir com valor diferente, edita pro valor correto.</li>
+          </ul>
+        </li>
+        <li><strong>Force rebuild:</strong> Aba <strong>Implantações</strong> → última implantação → menu <code>⋯</code> → <strong>Reimplantar</strong>. <em>Desmarque</em> a opção de cache pra garantir que o bundle JS novo pega a env var.</li>
+        <li>Aguarde 1-2 minutos até ficar verde. Abre <code>https://buscapreco.com</code> e testa uma busca.</li>
       </ol>
+
+      <div class="box warn">
+        <div class="label">Como confirmar que a env var foi aplicada</div>
+        <p>Abra <code>https://buscapreco.com</code>, F12 → aba <strong>Network</strong> → faça uma busca. A linha que aparece (ex: <code>produtos/barras/...</code>) tem que ter <strong>"Request URL: https://api.buscapreco.com/..."</strong> nos cabeçalhos. Se aparecer <code>http://localhost:8000/...</code>, a env var não foi aplicada — refaça o passo 4 acima sem cache.</p>
+      </div>
 
       <div class="box ok">
         <div class="label">Implantação completa</div>
@@ -568,10 +595,14 @@
   <h3>O site mostra "Produto não encontrado" pra códigos que existem</h3>
   <ol>
     <li>Abra o DevTools do navegador (F12) → aba <strong>Network</strong> → faça uma busca → clica na requisição falha.</li>
-    <li>Se for erro de CORS, confira que <code>buscapreco.com</code> e <code>www.buscapreco.com</code> estão na lista <code>allow_origins</code> do <code>srv-buscapreco.py</code>.</li>
+    <li><strong>Confira o "Request URL"</strong>. Se aparecer <code>http://localhost:8000/...</code> em vez de <code>https://api.buscapreco.com/...</code>, a env var <code>VITE_API_URL</code> não foi aplicada no build. Veja o <strong>Passo 5</strong> deste manual.</li>
+    <li>Se a URL está correta mas der erro de CORS, confira que <code>buscapreco.com</code> e <code>www.buscapreco.com</code> estão na lista <code>allow_origins</code> do <code>srv-buscapreco.py</code>.</li>
     <li>Se for erro 502/504, o tunnel está caído — confira o serviço.</li>
     <li>Se a resposta vier <code>{"exatos":[],"similares":[]}</code> com status 200, a API funcionou mas o código não existe no banco do cliente.</li>
   </ol>
+
+  <h3>Erro <code>ERR_CONNECTION_REFUSED</code> ou <code>net::ERR_BLOCKED_BY_CLIENT</code> no console</h3>
+  <p>O site está tentando chamar <code>http://localhost:8000</code> em vez de <code>https://api.buscapreco.com</code>. Causa: o build foi feito sem a variável <code>VITE_API_URL</code> setada no Cloudflare Pages. <strong>Fix:</strong> setar a env var em <em>Configurações → Variáveis de ambiente</em> e reimplantar <strong>sem usar cache</strong>. Veja o Passo 5 do manual.</p>
 
   <h3>Logs ficam grandes demais</h3>
   <p>O NSSM já rotaciona em 10MB. Se quiser limpar:</p>

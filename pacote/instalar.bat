@@ -13,8 +13,17 @@ set "NSSM=%BASE%\nssm.exe"
 set "API_EXE=%BASE%\BuscaPrecoAPI\BuscaPrecoAPI.exe"
 set "API_DIR=%BASE%\BuscaPrecoAPI"
 set "CF_EXE=%BASE%\cloudflared.exe"
-set "TUNNEL_CFG=%BASE%\tunnel\config.yml"
 set "LOGDIR=%BASE%\logs"
+
+REM ---- Resolve onde esta o config.yml ----
+REM Procura primeiro no pacote (pasta tunnel\), depois no local padrao do
+REM cloudflared (%USERPROFILE%\.cloudflared\). Quem chegar primeiro vence.
+set "TUNNEL_CFG=%BASE%\tunnel\config.yml"
+if not exist "%TUNNEL_CFG%" (
+    if exist "%USERPROFILE%\.cloudflared\config.yml" (
+        set "TUNNEL_CFG=%USERPROFILE%\.cloudflared\config.yml"
+    )
+)
 
 echo.
 echo ============================================================
@@ -77,6 +86,7 @@ REM ============================================================
 if exist "%CF_EXE%" (
     if exist "%TUNNEL_CFG%" (
         echo  [2/2] Registrando servico BuscaPrecoTunnel...
+        echo       config.yml: %TUNNEL_CFG%
 
         "%NSSM%" stop   BuscaPrecoTunnel confirm >nul 2>&1
         "%NSSM%" remove BuscaPrecoTunnel confirm >nul 2>&1
@@ -85,7 +95,7 @@ if exist "%CF_EXE%" (
             "--no-autoupdate" "--config" "%TUNNEL_CFG%" "tunnel" "run"     >nul
         "%NSSM%" set BuscaPrecoTunnel AppDirectory "%BASE%"                >nul
         "%NSSM%" set BuscaPrecoTunnel Description ^
-            "Cloudflare Tunnel — Busca Preco"                              >nul
+            "Cloudflare Tunnel - Busca Preco"                              >nul
         "%NSSM%" set BuscaPrecoTunnel Start SERVICE_AUTO_START             >nul
         "%NSSM%" set BuscaPrecoTunnel AppStdout "%LOGDIR%\tunnel.log"      >nul
         "%NSSM%" set BuscaPrecoTunnel AppStderr "%LOGDIR%\tunnel.log"      >nul
@@ -95,7 +105,10 @@ if exist "%CF_EXE%" (
         echo      OK
     ) else (
         echo  [2/2] Servico BuscaPrecoTunnel NAO instalado.
-        echo       Motivo: tunnel\config.yml nao encontrado.
+        echo       Motivo: config.yml nao encontrado.
+        echo       Locais procurados:
+        echo         %BASE%\tunnel\config.yml
+        echo         %USERPROFILE%\.cloudflared\config.yml
         echo       Veja LEIA-ME.txt - secao "Configurar Cloudflare Tunnel".
         set "HAS_TUNNEL=0"
     )
