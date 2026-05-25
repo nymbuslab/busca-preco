@@ -387,9 +387,18 @@
       <h4 style="margin-top:24px;">2.2 — Criar o túnel</h4>
 <pre><span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel create busca-preco-api</pre>
       <p>O comando imprime:</p>
-<pre>Created tunnel busca-preco-mercado-x with id <span class="var">abc12345-de67-89ab-cdef-1234567890ab</span></pre>
+<pre>Created tunnel busca-preco-api with id <span class="var">abc12345-de67-89ab-cdef-1234567890ab</span></pre>
       <p>Anote esse <strong>tunnel-id</strong> (UUID). Você vai precisar dele já já. O comando também criou um arquivo de credenciais em:</p>
 <pre>C:\Users\<span class="var">&lt;seu-usuario&gt;</span>\.cloudflared\<span class="var">&lt;tunnel-id&gt;</span>.json</pre>
+
+      <div class="box warn">
+        <div class="label">Se aparecer "tunnel with name already exists"</div>
+        <p>Significa que a conta Cloudflare já tem um tunnel com esse nome — provavelmente sobrou de uma instalação anterior, teste antigo, ou tentativa em outra máquina. Limpa e recria:</p>
+<pre><span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel cleanup busca-preco-api
+<span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel delete busca-preco-api
+<span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel create busca-preco-api</pre>
+        <p>O <code>cleanup</code> desconecta qualquer conexão ainda registrada no tunnel velho, e o <code>delete</code> remove ele da Cloudflare. Aí o <code>create</code> roda limpo. <strong>Importante:</strong> esse procedimento gera um <em>novo</em> tunnel-id e um novo arquivo de credenciais — use esses valores novos no passo 2.3.</p>
+      </div>
 
       <h4 style="margin-top:24px;">2.3 — Preencher o config.yml</h4>
       <p>Dentro da pasta do pacote, abra <code>tunnel\config.yml.exemplo</code> em um editor (Bloco de Notas serve). Você verá <strong>três</strong> placeholders pra trocar:</p>
@@ -416,6 +425,12 @@
       <h4 style="margin-top:24px;">2.4 — Apontar o DNS</h4>
 <pre><span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel route dns busca-preco-api <span class="var">api.buscapreco.com</span></pre>
       <p>Use o mesmo nome do túnel do passo 2.2 e o mesmo subdomínio que você colocou no <code>hostname</code>. Isso cria automaticamente um registro <code>CNAME</code> na zona DNS da Cloudflare.</p>
+
+      <div class="box warn">
+        <div class="label">Se aparecer "An A, AAAA, or CNAME record with that host already exists"</div>
+        <p>Significa que o subdomínio já tem um registro DNS apontado (por exemplo: vinha do tunnel antigo que você acabou de deletar). Use a flag <code>--overwrite-dns</code> pra sobrescrever:</p>
+<pre><span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel route dns --overwrite-dns busca-preco-api <span class="var">api.buscapreco.com</span></pre>
+      </div>
 
       <div class="box ok">
         <div class="label">Pronto</div>
@@ -516,6 +531,17 @@
 
   <!-- ========== TROUBLESHOOTING ========== -->
   <h2 id="troubleshoot">Solução de problemas</h2>
+
+  <h3>Erro "tunnel with name already exists" ao criar o tunnel</h3>
+  <p>A conta Cloudflare já tem um tunnel chamado <code>busca-preco-api</code> (de uma instalação ou teste anterior). Pra reusar o nome, primeiro limpa o velho:</p>
+<pre><span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel cleanup busca-preco-api
+<span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel delete busca-preco-api
+<span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel create busca-preco-api</pre>
+  <p>Esse procedimento gera um <strong>novo UUID e novo arquivo de credenciais</strong>. Atualize o <code>config.yml</code> com esses valores novos e refaça o passo de DNS com a flag <code>--overwrite-dns</code> (o CNAME do tunnel antigo ainda está lá).</p>
+
+  <h3>Erro "A, AAAA, or CNAME record already exists" ao apontar DNS</h3>
+  <p>O subdomínio já tem um registro DNS (provavelmente apontava pro tunnel anterior). Sobrescreve com:</p>
+<pre><span class="prompt">PS&gt;</span> .\cloudflared.exe tunnel route dns --overwrite-dns busca-preco-api api.buscapreco.com</pre>
 
   <h3>O serviço BuscaPrecoAPI não inicia</h3>
   <p>Veja o log:</p>
